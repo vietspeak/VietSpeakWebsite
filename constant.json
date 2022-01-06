@@ -1,4 +1,4 @@
 {
-    "PATH_TO_DATABASE": "./database/main.db",
+    "PATH_TO_DATABASE": "./database/main.sqlite",
     "SESSION_SECRET_KEY": "pleasechangethisstring"
 }

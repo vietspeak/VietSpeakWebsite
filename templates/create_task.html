@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <title>Create A Task - VietSpeak</title>
+  </head>
+  <body>
+
+    <h1>Hello {{ username }}!</h1>
+    <a class="btn btn-primary" href="./logout" role="button">Logout</a>
+    <form>
+        <input type="text" class="form-control" id="title" placeholder="Title"/>
+        <select class="form-control" id="visibility">
+            <option>Everyone</option>
+        </select>
+        <textarea class="form-control" id="transcript" rows="3" placeholder="Transcript"></textarea>
+        <input type="text" class="form-control" id="audio_link" placeholder="Audio Link"/>
+        Audio File: <input type="file" class="form-control-file" id="audio_file"/>
+        <input type="text" class="form-control" id="source" placeholder="Source"/>
+        <button type="button" class="btn btn-primary" id="create_task">Create A Task</button>
+    </form>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script type="module">
+        async function postData(url = '', data = {}) {
+            let formData = new FormData();
+            for (const [key, value] of Object.entries(data)) formData.append(key, value);
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData
+            });
+            return response.json();
+        }
+
+        document.getElementById("create_task").onclick = () => {
+            const fileField = document.querySelector('input[type="file"]');
+
+            let data = {
+                "title": document.getElementById("title").value,
+                "transcript": document.getElementById("transcript").value,
+                "audio_link": document.getElementById("audio_link").value,
+                "audio_file": fileField.files[0],
+                "source": document.getElementById("source")
+            }
+
+            postData("/create_task", data)
+            .then(data => {
+                console.log(data)
+            });
+        }
+    </script>
+  </body>
+</html>

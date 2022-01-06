@@ -8,18 +8,12 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
-    <title>Home - VietSpeak</title>
+    <title>Tasks - VietSpeak</title>
   </head>
   <body>
 
-    <form id="login-form">
-        <input type="text" class="form-control" id="username" placeholder="Username">
-        <input type="password" class="form-control" id="password" placeholder="Password">
-        <button type="button" class="btn btn-primary" id="login">Login</button>
-        <button type="button" class="btn btn-primary" id="register">Register</button>
-        <small id="message" class="form-text text-muted"></small>
-    </form>
-
+    <h1>Hello {{ username }}!</h1>
+    <a class="btn btn-primary" href="./logout" role="button">Logout</a>
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
@@ -33,28 +27,6 @@
                 body: JSON.stringify(data)
             });
             return response.json();
-        }
-
-        document.getElementById("register").onclick = () => {
-            let username = document.getElementById("username").value;
-            let password = document.getElementById("password").value;
-
-            postData('/register', {"username": username, "password": password})
-            .then(data => {
-                if (data.status) window.location.href = "./tasks";
-                document.getElementById("message").innerText = "Your username has been taken by someone else."
-            });
-        }
-
-        document.getElementById("login").onclick = () => {
-            let username = document.getElementById("username").value;
-            let password = document.getElementById("password").value;
-
-            postData('/login', {"username": username, "password": password})
-            .then(data => {
-                if (data.status) window.location.href = "./tasks";
-                else document.getElementById("message").innerText = "Your username or password is incorrect.";
-            });
         }
     </script>
   </body>

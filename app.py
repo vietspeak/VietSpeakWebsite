@@ -56,7 +56,22 @@ def get_password(username):
     else:
         return r[0]["password"]
 
- 
+def get_user_id(username):
+    query_str = "SELECT ROWID FROM users WHERE username = ?"
+    r = query_db(query_str, (username, ))
+    if len(r) == 0:
+        return None
+    else:
+        return r[0]["ROWID"]
+
+def get_group_id(groupname):
+    query_str = "SELECT ROWID FROM groups WHERE GroupName = ?"
+    r = query_db(query_str, (groupname, ))
+    if len(r) == 0:
+        return None
+    else:
+        return r[0]["ROWID"]
+
 @app.route("/register", methods=accepted_methods)
 def register():
     username = request.json.get("username", "")
@@ -70,6 +85,14 @@ def register():
     else:
         query_str = "INSERT INTO users (username, password) VALUES (?, ?)"
         query_db(query_str, (username, password_hashed))
+
+        user_id = get_user_id(username)
+        group_id = get_group_id("Everyone")
+
+        query_str = "INSERT INTO UserGroups (UserID, GroupID, Permission) VALUES (?, ?, ?)"
+        query_db(query_str, (user_id, group_id, 1))
+
+        session["username"] = username
         return jsonify({
             "status": True
         })
@@ -79,7 +102,9 @@ def login():
     username = request.json.get("username", "")
     password = request.json.get("password", "")
 
-    if bcrypt.check_password_hash(get_password(username), password):
+    actual_password = get_password(username)
+
+    if actual_password is not None and bcrypt.check_password_hash(actual_password, password):
         session["username"] = username
         return jsonify({
             "status": True
@@ -89,15 +114,48 @@ def login():
             "status": False
         })
 
-@app.route("/secret_page", methods=accepted_methods)
+@app.route("/tasks", methods=accepted_methods)
 @login_required
-def secret_page():
-    return "I'm here"
+def tasks():
+    username = session.get("username")
+    return render_template("tasks.html", username=username)
+
+@app.route("/create_task_page", methods=accepted_methods)
+@login_required
+def create_task_page():
+    username = session.get("username")
+    return render_template("create_task.html", username=username)
+
+@app.route("/get_groups", methods=accepted_methods)
+@login_required
+def get_groups():
+    username = session.get("username")
+    
+    query = """
+    SELECT Groups.ROWID AS id, Groups.GroupName as name 
+    FROM Groups, Users WHERE
+    Users.username = ? AND Users.ROWID = Groups.UserID 
+    """
+
+    r = query_db(query, username)
+
+    result_array = []
+    for x in r:
+        result_array.append({"id": x["id"], "name": x["name"]})
+    
+    return jsonify({"result": result_array})
 
 @app.route("/logout", methods=accepted_methods)
 def logout():
     session.pop("username", None)
     return redirect(url_for("home_page"))
+
+
+@app.route("/create_task", methods=accepted_methods)
+def create_task():
+    return jsonify({
+        "status": False
+    })
 
 
 @app.teardown_appcontext
