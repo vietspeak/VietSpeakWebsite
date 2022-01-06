@@ -21,6 +21,9 @@
     <div id="invitations">
     </div>
     <a class="btn btn-primary" href="./create_group_page" role="button">Create A New Group</a>
+    <h2>Upload Files (for testing)</h2>
+    Audio File: <input type="file" class="form-control-file" id="audio_file"/>
+    <button type="button" class="btn btn-primary" id="upload_file">Upload</button>
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
@@ -92,7 +95,16 @@
 
               listOfGroupNames.appendChild(document.createElement("br"));
             });
-        })
+        });
+
+        document.getElementById("upload_file").onclick = () => {
+          const fileField = document.querySelector('input[type="file"]');
+
+          postData("upload_file", {"file": fileField.files[0]})
+          .then((response) => {
+            console.log(response);
+          })
+        }
     </script>
   </body>
 </html>

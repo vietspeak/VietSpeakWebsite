@@ -1,8 +1,10 @@
+import re
 import sqlite3
 import json
 import time
+import io
 from functools import wraps
-from flask import Flask, render_template, request, g, session, redirect, sessions, url_for
+from flask import Flask, render_template, request, g, session, redirect, url_for
 from flask.json import jsonify
 from flask_bcrypt import Bcrypt
 
@@ -10,6 +12,7 @@ constant_data = None
 with open("constant.json", "r") as f:
     constant_data = json.load(f) 
 DATABASE = constant_data["PATH_TO_DATABASE"]
+
 app = Flask(__name__)
 app.secret_key = constant_data["SESSION_SECRET_KEY"]
 bcrypt = Bcrypt(app)
@@ -358,6 +361,29 @@ def logout():
 def create_task():
     return jsonify({
         "status": False
+    })
+
+@app.route("/upload_file", methods=accepted_methods)
+def upload_file():
+    file = request.files.get("file", "")
+    fake_file = io.BytesIO()
+    file.save(fake_file)
+
+    query_str = """
+        INSERT INTO AudioFiles (AudioFile) VALUES (?)
+    """
+
+    query_db(query_str, (fake_file.getvalue(), ))
+
+    query_str = """
+        SELECT last_insert_rowid() as id FROM AudioFiles
+    """
+
+    r = query_db(query_str)
+
+    return jsonify({
+        "file_id": r[0]["id"],
+        "status": True
     })
 
 

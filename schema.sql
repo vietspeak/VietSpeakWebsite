@@ -29,31 +29,37 @@ CREATE TABLE TaskGroups (
     FOREIGN KEY(GroupID) REFERENCES Groups(ROWID) ON DELETE CASCADE
 );
 
+CREATE TABLE AudioFiles (
+    AudioFile BLOB,
+    Transcript TEXT
+);
+
 CREATE TABLE Tasks (
     AuthorID INTEGER,
     Title TEXT,
     Difficulty INTEGER,
     Transcript TEXT,
-    GradingTranscript TEXT,
+    FileID INTEGER
     AudioLink TEXT,
-    AudioFile BLOB,
     AudioTimeBegin INTEGER,
     AudioTimeEnd INTEGER,
     CurrentStatus INTEGER,
     CreationTime REAL DEFAULT ((julianday('now') - 2440587.5)*86400.0),
     LastUpdated REAL DEFAULT ((julianday('now') - 2440587.5)*86400.0),
     Source TEXT,
-    FOREIGN KEY(AuthorID) REFERENCES Users(ROWID) ON DELETE CASCADE
+    FOREIGN KEY(AuthorID) REFERENCES Users(ROWID) ON DELETE CASCADE,
+    FOREIGN KEY(FileID) REFERENCES AudioFile(ROWID) ON DELETE CASCADE
 );
 
 CREATE TABLE Submissions (
     UserID INTEGER,
     TaskID INTEGER,
-    SubmissionFile BLOB,
+    FileID INTEGER
     CurrentStatus INTEGER,
     Transcript TEXT,
     Score REAL,
     CreationTime REAL DEFAULT ((julianday('now') - 2440587.5)*86400.0),
+    FOREIGN KEY(FileID) REFERENCES AudioFile(ROWID) ON DELETE CASCADE
     FOREIGN KEY (UserID) REFERENCES Users(ROWID) ON DELETE CASCADE,
     FOREIGN KEY (TaskID) REFERENCES Tasks(ROWID) ON DELETE CASCADE
 );
