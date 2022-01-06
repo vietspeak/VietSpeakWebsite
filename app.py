@@ -1,7 +1,8 @@
 import sqlite3
 import json
+import time
 from functools import wraps
-from flask import Flask, render_template, request, g, session, redirect, url_for
+from flask import Flask, render_template, request, g, session, redirect, sessions, url_for
 from flask.json import jsonify
 from flask_bcrypt import Bcrypt
 
@@ -74,8 +75,8 @@ def get_group_id(groupname):
 
 @app.route("/register", methods=accepted_methods)
 def register():
-    username = request.json.get("username", "")
-    password = request.json.get("password", "")
+    username = request.values.get("username", "")
+    password = request.values.get("password", "")
     password_hashed = bcrypt.generate_password_hash(password).decode('utf-8')
 
     if get_password(username) is not None:
@@ -89,7 +90,7 @@ def register():
         user_id = get_user_id(username)
         group_id = get_group_id("Everyone")
 
-        query_str = "INSERT INTO UserGroups (UserID, GroupID, Permission) VALUES (?, ?, ?)"
+        query_str = "INSERT INTO UserGroups (UserID, GroupID, IsMember) VALUES (?, ?, ?)"
         query_db(query_str, (user_id, group_id, 1))
 
         session["username"] = username
@@ -99,8 +100,8 @@ def register():
 
 @app.route("/login", methods=accepted_methods)
 def login():
-    username = request.json.get("username", "")
-    password = request.json.get("password", "")
+    username = request.values.get("username", "")
+    password = request.values.get("password", "")
 
     actual_password = get_password(username)
 
@@ -132,18 +133,28 @@ def get_groups():
     username = session.get("username")
     
     query = """
-    SELECT Groups.ROWID AS id, Groups.GroupName as name 
-    FROM Groups, Users WHERE
-    Users.username = ? AND Users.ROWID = Groups.UserID 
+        SELECT Groups.ROWID AS id, Groups.GroupName as name 
+        FROM Groups, Users, UserGroups WHERE
+        Users.username = ? AND Users.ROWID = UserGroups.UserID AND UserGroups.GroupID = Groups.ROWID
     """
 
-    r = query_db(query, username)
+    r = query_db(query, (username, ))
 
     result_array = []
     for x in r:
         result_array.append({"id": x["id"], "name": x["name"]})
     
     return jsonify({"result": result_array})
+
+@app.route("/create_group", methods=accepted_methods)
+@login_required
+def create_group():
+    username = session.get("username")
+    user_id = get_user_id(username)
+
+    group_name = request.values.get("")
+
+    
 
 @app.route("/logout", methods=accepted_methods)
 def logout():

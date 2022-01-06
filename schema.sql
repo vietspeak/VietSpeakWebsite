@@ -4,13 +4,19 @@ CREATE TABLE Users (
 );
 
 CREATE TABLE Groups (
-    GroupName TEXT UNIQUE
+    GroupName TEXT UNIQUE,
+    CreationTime REAL DEFAULT ((julianday('now') - 2440587.5)*86400.0)
 );
 
 CREATE TABLE UserGroups (
     UserID INTEGER,
     GroupID INTEGER,
-    Permission INTEGER,
+    IsInvited INTEGER DEFAULT 0,
+    IsMember INTEGER DEFAULT 0,
+    IsOwner INTEGER DEFAULT 0,
+    CanChangeMember INTEGER DEFAULT 0,
+    CanChangeTask INTEGER DEFAULT 0,
+    CreationTime REAL DEFAULT ((julianday('now') - 2440587.5)*86400.0),
     FOREIGN KEY(UserID) REFERENCES Users(ROWID) ON DELETE CASCADE,
     FOREIGN KEY(GroupID) REFERENCES Groups(ROWID) ON DELETE CASCADE
 );
@@ -29,10 +35,12 @@ CREATE TABLE Tasks (
     Transcript TEXT,
     GradingTranscript TEXT,
     AudioLink TEXT,
-    AudioFilePath TEXT,
+    AudioFile BLOB,
     AudioTimeBegin INTEGER,
     AudioTimeEnd INTEGER,
     CurrentStatus INTEGER,
+    CreationTime REAL DEFAULT ((julianday('now') - 2440587.5)*86400.0),
+    LastUpdated REAL DEFAULT ((julianday('now') - 2440587.5)*86400.0),
     Source TEXT,
     FOREIGN KEY(AuthorID) REFERENCES Users(ROWID) ON DELETE CASCADE
 );
@@ -40,10 +48,11 @@ CREATE TABLE Tasks (
 CREATE TABLE Submissions (
     UserID INTEGER,
     TaskID INTEGER,
-    SubmissionFilePath TEXT,
+    SubmissionFile BLOB,
     CurrentStatus INTEGER,
     Transcript TEXT,
     Score REAL,
+    CreationTime REAL DEFAULT ((julianday('now') - 2440587.5)*86400.0),
     FOREIGN KEY (UserID) REFERENCES Users(ROWID) ON DELETE CASCADE,
     FOREIGN KEY (TaskID) REFERENCES Tasks(ROWID) ON DELETE CASCADE
 );
