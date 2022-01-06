@@ -17,6 +17,9 @@
     <h2>My Groups</h2>
     <div id="group_names">
     </div>
+    <h2>Invitations</h2>
+    <div id="invitations">
+    </div>
     <a class="btn btn-primary" href="./create_group_page" role="button">Create A New Group</a>
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
@@ -36,8 +39,6 @@
 
         postData("./get_groups")
         .then((data) => {
-          console.log(data);
-          console.log(data["result"]);
           data["result"].forEach( (e) => {
               let listOfGroupNames = document.getElementById("group_names");
               let newLink = document.createElement("a");
@@ -48,6 +49,50 @@
             });
         });
 
+        postData("./get_invitations")
+        .then((data) => {
+          data["result"].forEach( (e) => {
+              let listOfGroupNames = document.getElementById("invitations");
+              let newLink = document.createElement("text");
+              newLink.innerText = e["name"];
+              listOfGroupNames.appendChild(newLink);
+              
+              let accept_button = document.createElement("button");
+              let classAttribute = document.createAttribute("class");
+              classAttribute.value = "btn btn-primary";
+              accept_button.setAttributeNode(classAttribute);
+              accept_button.onclick = () => {
+                fetch("/accept_invitation?id=" + e["id"])
+                .then((data) => {
+                  if (data["status"]) window.location.href = window.location.href;
+                })
+              };
+
+              let roleAttribute = document.createAttribute("role");
+              roleAttribute.value = "button";
+              accept_button.setAttributeNode(roleAttribute)
+
+              accept_button.innerText = "Accept";
+
+              listOfGroupNames.appendChild(accept_button);
+
+              let deny_button = document.createElement("button");
+              deny_button.setAttribute("class", "btn btn-danger");
+              deny_button.setAttribute("role", "button");
+              deny_button.innerText = "Deny";
+
+              deny_button.onclick = () => {
+                fetch("/deny_invitation?id=" + e["id"])
+                .then((data) => {
+                  if (data["status"]) window.location.href = window.location.href;
+                })
+              };
+
+              listOfGroupNames.appendChild(deny_button);
+
+              listOfGroupNames.appendChild(document.createElement("br"));
+            });
+        })
     </script>
   </body>
 </html>

@@ -259,6 +259,48 @@ def get_members_in_group():
         "result": total_array
     }
 
+@app.route("/get_invitations", methods=accepted_methods)
+@login_required
+def get_invitations():
+    user_id = session.get("user_id")
+    
+    query_str = """
+        SELECT UserGroups.GroupID as id, Groups.GroupName as name
+        FROM UserGroups, Groups
+        WHERE UserGroups.UserID = ? AND UserGroups.GroupID = Groups.ROWID AND UserGroups.IsInvited = 1
+    """
+
+    r = query_db(query_str, (user_id, ))
+
+    total_array = []
+    for x in r:
+        total_array.append({
+            "id": x["id"],
+            "name": x["name"]
+        })
+    
+    return {
+        "result": total_array
+    }
+
+@app.route("/accept_invitation", methods=accepted_methods)
+@login_required
+def accept_invitation():
+    user_id = session.get("user_id")
+    group_id = int(request.values.get("id"))
+    query_str = """
+        UPDATE UserGroups
+        SET IsInvited = 0, IsMember = 1
+        WHERE UserID = ? AND GroupID = ? AND IsInvited = 1
+    """
+
+    query_db(query_str, (user_id, group_id))
+
+    return {
+        "status": True
+    }
+
+
 @app.route("/view_group", methods=accepted_methods)
 @login_required
 def view_group():
