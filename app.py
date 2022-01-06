@@ -35,20 +35,6 @@ def query_db(query, args=(), one=False):
     get_db().commit()
     return (rv[0] if rv else None) if one else rv
 
-
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if session.get("username") is None:
-            return redirect(url_for("home_page"))
-        return f(*args, **kwargs)
-    
-    return decorated_function
-
-@app.route("/")
-def home_page():
-    return render_template("index.html")
-
 def get_password(username):
     query_str = "SELECT password FROM users WHERE username = ?"
     r = query_db(query_str, (username, ))
@@ -73,15 +59,82 @@ def get_group_id(groupname):
     else:
         return r[0]["ROWID"]
 
+def is_user_in_group(user_id, group_id):
+    query_str = """
+        SELECT * FROM UserGroups
+        WHERE UserID = ? AND GroupID = ? AND IsMember = 1
+    """
+
+    r = query_db(query_str, (user_id, group_id))
+
+    return len(r) == 1
+
+def is_user_can_change_member(user_id, group_id):
+    query_str = """
+        SELECT * FROM UserGroups
+        WHERE UserID = ? AND GroupID = ? AND CanChangeMember = 1
+    """
+
+    r = query_db(query_str, (user_id, group_id))
+
+    return len(r) == 1
+
+def is_user_invited(user_id, group_id):
+    query_str = """
+        SELECT * FROM UserGroups
+        WHERE UserID = ? AND GroupID = ? AND IsInvited = 1
+    """
+
+    r = query_db(query_str, (user_id, group_id))
+
+    return len(r) == 1
+
+def get_group_name(group_id):
+    query_str = """
+        SELECT * FROM Groups
+        WHERE ROWID = ?    
+    """
+
+    r = query_db(query_str, (group_id, ))
+
+    if len(r) == 0:
+        return None
+    else:
+        return r[0]["GroupName"]
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get("user_id") is None:
+            return redirect(url_for("home_page"))
+        return f(*args, **kwargs)
+    
+    return decorated_function
+
+@app.route("/")
+def home_page():
+    return render_template("index.html")
+
+
+
 @app.route("/register", methods=accepted_methods)
 def register():
     username = request.values.get("username", "")
     password = request.values.get("password", "")
+
+    if password == "":
+        return jsonify({
+            "status": False,
+            "message": "The password cannot be empty."
+        })
+    
     password_hashed = bcrypt.generate_password_hash(password).decode('utf-8')
 
     if get_password(username) is not None:
         return jsonify({
-            "status": False
+            "status": False,
+            "message": "This username has already been taken"
         })
     else:
         query_str = "INSERT INTO users (username, password) VALUES (?, ?)"
@@ -93,6 +146,7 @@ def register():
         query_str = "INSERT INTO UserGroups (UserID, GroupID, IsMember) VALUES (?, ?, ?)"
         query_db(query_str, (user_id, group_id, 1))
 
+        session["user_id"] = user_id
         session["username"] = username
         return jsonify({
             "status": True
@@ -107,6 +161,7 @@ def login():
 
     if actual_password is not None and bcrypt.check_password_hash(actual_password, password):
         session["username"] = username
+        session["user_id"] = get_user_id(username)
         return jsonify({
             "status": True
         })
@@ -135,7 +190,7 @@ def get_groups():
     query = """
         SELECT Groups.ROWID AS id, Groups.GroupName as name 
         FROM Groups, Users, UserGroups WHERE
-        Users.username = ? AND Users.ROWID = UserGroups.UserID AND UserGroups.GroupID = Groups.ROWID
+        Users.username = ? AND Users.ROWID = UserGroups.UserID AND UserGroups.GroupID = Groups.ROWID AND UserGroups.IsMember = 1
     """
 
     r = query_db(query, (username, ))
@@ -146,16 +201,111 @@ def get_groups():
     
     return jsonify({"result": result_array})
 
+@app.route("/create_group_page", methods=accepted_methods)
+@login_required
+def create_group_page():
+    username = session.get("username")
+    return render_template("create_group.html", username = username)
+
+
 @app.route("/create_group", methods=accepted_methods)
 @login_required
 def create_group():
-    username = session.get("username")
-    user_id = get_user_id(username)
+    user_id = session.get("user_id")
+    group_name = request.values.get("group_name", "")
 
-    group_name = request.values.get("")
+    if get_group_id(group_name) is None:
+        query_str = "INSERT INTO Groups (GroupName) VALUES (?)"
+        query_db(query_str, (group_name, ))
+
+        query_str = "INSERT INTO UserGroups (UserId, GroupId, IsMember, IsOwner, CanChangeMember, CanChangeTask) VALUES (?, ?, ?, ?, ?, ?)"
+        query_db(query_str, (user_id, get_group_id(group_name), 1, 1, 1, 1))
+
+        return jsonify({
+            "status": True
+        })
+    else:
+        return jsonify({
+            "status": False
+        })
+
+@app.route("/get_members_in_group", methods=accepted_methods)
+@login_required
+def get_members_in_group():
+    user_id = session.get("user_id")
+    group_id = int(request.values.get("group_id"))
+
+    if not is_user_in_group(user_id, group_id):
+        return {
+            "result": []
+        }
+    
+    query_str = """
+        SELECT Users.ROWID as id, Users.username as name
+        FROM Users, UserGroups
+        WHERE UserGroups.GroupID = ? AND UserGroups.UserID = Users.ROWID AND UserGroups.IsMember = 1
+    """
+
+    r = query_db(query_str, (group_id, ))
+
+    total_array = []
+    for x in r:
+        total_array.append({
+            "id": x["id"],
+            "name": x["name"]
+        })
+    
+    return {
+        "result": total_array
+    }
+
+@app.route("/view_group", methods=accepted_methods)
+@login_required
+def view_group():
+    user_id = session.get("user_id")
+    group_id = int(request.values.get("id"))
+
+    if not is_user_in_group(user_id, group_id):
+        return redirect(url_for("logout"))
+    
+    return render_template("view_group.html", 
+                            username = session.get("username"), 
+                            groupname = get_group_name(group_id), 
+                            group_id = group_id)
+
+@app.route("/invite_member", methods=accepted_methods)
+@login_required
+def invite_member():
+    owner_id = session.get("user_id")
+    invited_member_name = request.values.get("username")
+    invited_id = get_user_id(invited_member_name)
+
+    if invited_id is None:
+        return jsonify({
+            "status": False
+        })
+    
+    group_id = int(request.values.get("group_id"))
+
+    if not is_user_can_change_member(owner_id, group_id):
+        return redirect(url_for("logout"))
+
+    if is_user_invited(invited_id, group_id):
+        return jsonify({
+            "status": True
+        })
+    
+    query_str = """
+        INSERT INTO UserGroups (UserID, GroupID, IsInvited) VALUES (?, ?, 1)
+    """
+
+    query_db(query_str, (invited_id, group_id))
+
+    return jsonify({
+        "status": True
+    })
 
     
-
 @app.route("/logout", methods=accepted_methods)
 def logout():
     session.pop("username", None)

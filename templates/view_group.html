@@ -9,15 +9,18 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
     <title>Tasks - VietSpeak</title>
+    <p id="group_id" hidden>{{group_id}}</p>
   </head>
   <body>
-
     <h1>Hello {{ username }}!</h1>
     <a class="btn btn-primary" href="./logout" role="button">Logout</a>
-    <h2>My Groups</h2>
-    <div id="group_names">
+    <h2>Group {{ groupname }}</h2>
+    <h3>Members</h3>
+    <div id="members">
     </div>
-    <a class="btn btn-primary" href="./create_group_page" role="button">Create A New Group</a>
+    <input type="text" class="form-control" id="new_member" placeholder="New Member"/>
+    <button type="button" class="btn btn-primary" id="invite_member">Invite</button>
+    <small id="message" class="form-text text-muted"></small>
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
@@ -34,19 +37,26 @@
             return response.json();
         }
 
-        postData("./get_groups")
+        postData("./get_members_in_group", {group_id: document.getElementById("group_id").innerText})
         .then((data) => {
-          console.log(data);
-          console.log(data["result"]);
           data["result"].forEach( (e) => {
-              let listOfGroupNames = document.getElementById("group_names");
-              let newLink = document.createElement("a");
-              newLink.href = "./view_group?id=" + e["id"];
-              newLink.innerText = e["name"];
-              listOfGroupNames.appendChild(newLink);
-              listOfGroupNames.appendChild(document.createElement("br"));
+              let listOfMemberNames = document.getElementById("members");
+              let newMember = document.createElement("p");
+              newMember.innerText = e["name"];
+              listOfMemberNames.appendChild(newMember);
+              listOfMemberNames.appendChild(document.createElement("br"));
             });
         });
+
+
+        document.getElementById("invite_member").onclick = () => {
+            let username = document.getElementById("new_member").value;
+            postData("./invite_member", {username: username, group_id: document.getElementById("group_id").innerText})
+            .then((data) => {
+                if (data["status"]) window.location.href=window.location.href;
+                else document.getElementById("message").innerText = "This user has been invited"
+            });
+        }
 
     </script>
   </body>

@@ -17,6 +17,7 @@ CREATE TABLE UserGroups (
     CanChangeMember INTEGER DEFAULT 0,
     CanChangeTask INTEGER DEFAULT 0,
     CreationTime REAL DEFAULT ((julianday('now') - 2440587.5)*86400.0),
+    UNIQUE(UserID, GroupID),
     FOREIGN KEY(UserID) REFERENCES Users(ROWID) ON DELETE CASCADE,
     FOREIGN KEY(GroupID) REFERENCES Groups(ROWID) ON DELETE CASCADE
 );
