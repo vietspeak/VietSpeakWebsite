@@ -14,8 +14,12 @@
   <body>
 
     <h1>Hello {{ username }}!</h1>
-    <a class="btn btn-primary" href="./logout" role="button">Logout</a>
-    <h2>Edit Task</h2>
+    <a class="btn btn-danger" href="./logout" role="button">Logout</a><br>
+    <a class="btn btn-primary" href="./tasks" role="button">Home</a><br>
+    {% if group_id %}
+    <a class="btn btn-primary" href="./view_group_members?id={{group_id}}" role="button">{{groupname}}'s Members</a>
+    <a class="btn btn-primary" href="./view_group_tasks?id={{group_id}}" role="button">{{groupname}}'s Tasks</a><br>
+    {% endif %}
     <form>
         <input type="text" class="form-control" id="title" placeholder="Title"/>
         <textarea class="form-control" id="transcript" rows="3" placeholder="Transcript"></textarea>
@@ -24,7 +28,9 @@
         <input type="text" class="form-control" id="end_time" placeholder="End Time (in seconds)"/>
         Audio File: <input type="file" class="form-control-file" id="audio_file"/>
         <input type="text" class="form-control" id="source" placeholder="Source"/>
+        {% if user_is_author %}
         <button type="button" class="btn btn-primary" id="edit_task">Edit</button>
+        {% endif %}
     </form>
     <h2>Submit</h2>
     Audio File: <input type="file" class="form-control-file" id="submission_file"/>
@@ -73,27 +79,28 @@
             }
         });
 
+        if (document.getElementById("edit_task")) {
+            document.getElementById("edit_task").onclick = () => {
+                const fileField = document.querySelector('input[type="file"]');
 
-        document.getElementById("edit_task").onclick = () => {
-            const fileField = document.querySelector('input[type="file"]');
+                let data = {
+                    "task_id": task_id,
+                    "title": document.getElementById("title").value,
+                    "transcript": document.getElementById("transcript").value,
+                    "audio_link": document.getElementById("audio_link").value,
+                    "audio_time_begin": document.getElementById("start_time").value,
+                    "audio_time_end": document.getElementById("end_time").value,
+                    "audio_file": fileField.files[0],
+                    "source": document.getElementById("source").value
+                }
 
-            let data = {
-                "task_id": task_id,
-                "title": document.getElementById("title").value,
-                "transcript": document.getElementById("transcript").value,
-                "audio_link": document.getElementById("audio_link").value,
-                "audio_time_begin": document.getElementById("start_time").value,
-                "audio_time_end": document.getElementById("end_time").value,
-                "audio_file": fileField.files[0],
-                "source": document.getElementById("source").value
+                console.log(data);
+
+                postData("/update_task", data)
+                .then(data => {
+                    if (data["status"]) window.location.href = window.location.href;
+                });
             }
-
-            console.log(data);
-
-            postData("/update_task", data)
-            .then(data => {
-                if (data["status"]) window.location.href = window.location.href;
-            });
         }
 
         document.getElementById("submit_task").onclick = () => {
@@ -125,10 +132,18 @@
                 let box2 = document.createElement("td");
                 box2.innerText = convertTime(r["time"]);
                 let box3 = document.createElement("td");
-                if (r["status"] == 1) box3.innerText = "Evaluating";
-                else box3.innerText = "Graded";
-                let box4 = document.createElement("td");
+                let box4 = document.createElement("a");
                 box4.innerText = r["score"];
+                
+                if (r["status"] == 1) {
+                    box3.innerText = "Evaluating";
+                }
+                else {
+                    box3.innerText = "Graded";
+                    box4.setAttribute("href", "view_submission?id="+r["id"]);
+                    box4.setAttribute("class", "btn");
+                }
+                
                 row.appendChild(box1);
                 row.appendChild(box2);
                 row.appendChild(box3);

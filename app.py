@@ -77,7 +77,7 @@ def is_user_in_group(user_id, group_id):
 
     return len(r) == 1
 
-def is_user_can_change_member(user_id, group_id):
+def can_user_change_member(user_id, group_id):
     query_str = """
         SELECT * FROM UserGroups
         WHERE UserID = ? AND GroupID = ? AND CanChangeMember = 1
@@ -86,6 +86,24 @@ def is_user_can_change_member(user_id, group_id):
     r = query_db(query_str, (user_id, group_id))
 
     return len(r) == 1
+
+def can_user_change_task(user_id, group_id):
+    query_str = """
+        SELECT * FROM UserGroups
+        WHERE UserID = ? AND GroupID = ? AND CanChangeTask = 1
+    """
+    r = query_db(query_str, (user_id, group_id))
+    return len(r) == 1
+
+def is_user_author_task(user_id, task_id):
+    query_str = """
+        SELECT * FROM Tasks
+        WHERE AuthorID = ? AND ROWID = ?
+    """
+
+    r = query_db(query_str, (user_id, task_id), one=True)
+
+    return r is not None
 
 def is_user_invited(user_id, group_id):
     query_str = """
@@ -200,6 +218,10 @@ def login():
 @login_required
 def tasks():
     username = session.get("username")
+
+    session.pop("groupname", None)
+    session.pop("group_id", None)
+
     return render_template("tasks.html", username=username)
 
 @app.route("/create_task_page", methods=accepted_methods)
@@ -326,21 +348,6 @@ def accept_invitation():
         "status": True
     }
 
-
-@app.route("/view_group", methods=accepted_methods)
-@login_required
-def view_group():
-    user_id = session.get("user_id")
-    group_id = int(request.values.get("id"))
-
-    if not is_user_in_group(user_id, group_id):
-        return redirect(url_for("logout"))
-    
-    return render_template("view_group.html", 
-                            username = session.get("username"), 
-                            groupname = get_group_name(group_id), 
-                            group_id = group_id)
-
 @app.route("/invite_member", methods=accepted_methods)
 @login_required
 def invite_member():
@@ -355,7 +362,7 @@ def invite_member():
     
     group_id = int(request.values.get("group_id"))
 
-    if not is_user_can_change_member(owner_id, group_id):
+    if not can_user_change_member(owner_id, group_id):
         return redirect(url_for("logout"))
 
     if is_user_invited(invited_id, group_id):
@@ -451,6 +458,32 @@ def get_tasks_created_by_user():
         "result": total_array
     })
 
+@app.route("/get_tasks_in_group", methods=accepted_methods)
+@login_required
+def get_tasks_in_group():
+    user_id = session.get("user_id")
+    group_id = request.values.get("group_id")
+
+    if not is_user_in_group(user_id, group_id):
+        return redirect(url_for("logout"))
+
+
+    query_str = """
+        SELECT Tasks.ROWID as id, Tasks.Title as title, Tasks.Source as source
+        FROM Tasks, TaskGroups
+        WHERE Tasks.ROWID = TaskGroups.TaskID AND TaskGroups.GroupID = ?
+    """
+
+    r = query_db(query_str, (group_id, ))
+
+    total_array = []
+    for x in r:
+        total_array.append({"id": x["id"], "title": x["title"], "source": x["source"] })
+    
+    return jsonify({
+        "result": total_array
+    })
+
 @app.route("/get_task", methods=accepted_methods)
 @login_required
 def get_task():
@@ -494,8 +527,14 @@ def get_task():
 def view_task():
     task_id = to_int(request.values.get("id"))
     username = session.get("username", "")
+    user_id = session.get("user_id")
 
-    return render_template("view_task.html", username=username, task_id=task_id)
+    return render_template("view_task.html", 
+                           username=username, 
+                           task_id=task_id, 
+                           user_is_author = is_user_author_task(user_id, task_id),
+                           groupname = session.get("groupname", None),
+                           group_id = session.get("group_id", None))
 
 @app.route("/update_task", methods=accepted_methods)
 @login_required
@@ -630,12 +669,157 @@ def get_submissions():
             "id": x["id"],
             "time": x["time"],
             "status": x["status"],
-            "score": x["score"]
+            "score": round(x["score"], 2)
         })
     
     return jsonify({
         "result": total_array
-    });
+    })
+
+@app.route("/get_submission", methods=accepted_methods)
+@login_required
+def get_submission():
+    user_id = session.get("user_id")
+    submission_id = int(request.values.get("id"))
+
+    query_str = """
+        SELECT Tasks.ROWID as task_id, 
+               Tasks.Title as task_title, 
+               Submissions.CurrentStatus as status, 
+               Submissions.Score as score, 
+               Submissions.CreationTime as time,
+               Submissions.Feedback as feedback,
+               AudioFiles.transcript as transcript
+        FROM Submissions, Tasks, AudioFiles
+        WHERE Submissions.ROWID = ? AND Submissions.UserID = ? AND Submissions.TaskID = Tasks.ROWID AND AudioFiles.ROWID = Submissions.FileID
+    """
+
+
+    x = query_db(query_str, (submission_id, user_id), one=True)
+    if x is None:
+        return redirect(url_for("logout"))
+    
+    
+    return jsonify({
+        "id": submission_id,
+        "time": x["time"],
+        "status": x["status"],
+        "score": round(x["score"], 2),
+        "feedback": x["feedback"],
+        "task_id": x["task_id"],
+        "task_title": x["task_title"],
+        "transcript": x["transcript"]
+    })
+
+@app.route("/view_submission", methods=accepted_methods)
+@login_required
+def view_submission():
+    username = session.get("username")
+
+    group_id = session.get("group_id", None)
+    groupname = session.get("groupname", None)
+
+
+    submission_id = int(request.values.get("id"))
+
+
+    return render_template("view_submission.html",
+                           username = username,
+                           group_id = group_id,
+                           groupname = groupname,
+                           submission_id = submission_id)
+
+    
+@app.route("/add_task_to_group", methods=accepted_methods)
+@login_required
+def add_task_to_group():
+    user_id = session.get("user_id")
+    group_id = to_int(request.values.get("group_id", ""))
+    task_title = request.values.get("task_title", "")
+
+    if not can_user_change_task(user_id, group_id):
+        return redirect(url_for("logout"))
+
+    query_str = """
+        SELECT ROWID as id
+        FROM Tasks
+        WHERE AuthorID = ? AND Title = ?
+    """
+
+    r = query_db(query_str, (user_id, task_title, ), one=True)
+
+    if r is None:
+        print("I'm here")
+        return jsonify({
+            "status": False,
+            "message": "You do not have any task with this title."
+        })
+    
+    task_id = r["id"]
+
+    query_str = """
+        SELECT * FROM TaskGroups WHERE TaskID = ? AND GroupID = ?
+    """
+
+    r = query_db(query_str, (task_id, group_id), one=True)
+
+    if r is not None:
+        return jsonify({
+            "status": True
+        })
+    
+    query_str = """
+        INSERT INTO TaskGroups (TaskID, GroupID)
+        VALUES (?, ?)
+    """
+
+
+    query_db(query_str, (task_id, group_id))
+
+    return jsonify({
+        "status": True
+    })
+
+@app.route("/view_group_members", methods=accepted_methods)
+@login_required
+def view_group_members():
+    user_id = session.get("user_id")
+    group_id = int(request.values.get("id"))
+
+    can_change_member = can_user_change_member(user_id, group_id)
+
+    if not is_user_in_group(user_id, group_id):
+        return redirect(url_for("logout"))
+    
+    session["group_id"] = group_id
+    session["groupname"] = get_group_name(group_id)
+    
+    return render_template("view_group_members.html", 
+                            username = session.get("username"), 
+                            groupname = session.get("groupname"), 
+                            group_id = group_id,
+                            can_change_member = can_change_member)
+
+@app.route("/view_group_tasks", methods=accepted_methods)
+@login_required
+def view_group_tasks():
+    user_id = session.get("user_id")
+    group_id = int(request.values.get("id"))
+
+    can_change_task = can_user_change_task(user_id, group_id)
+
+    if not is_user_in_group(user_id, group_id):
+        return redirect(url_for("logout"))
+    
+    session["group_id"] = group_id
+    session["groupname"] = get_group_name(group_id)
+    
+    return render_template("view_group_tasks.html", 
+                            username = session.get("username"), 
+                            groupname = session.get("groupname"), 
+                            group_id = group_id,
+                            can_change_task = can_change_task)
+
 
 @app.teardown_appcontext
 def close_connection(exception):

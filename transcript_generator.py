@@ -141,7 +141,7 @@ while True:
             WHERE ROWID = ?
         """
 
-        query_db(query_str, (feedback, score, submission_id))
+        query_db(query_str, (feedback, score*100, submission_id))
     
     db.close()
     

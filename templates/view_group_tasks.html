@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <title>Tasks - VietSpeak</title>
+    <p id="group_id" hidden>{{group_id}}</p>
+  </head>
+  <body>
+    <h1>Hello {{ username }}!</h1>
+    <a class="btn btn-danger" href="./logout" role="button">Logout</a><br>
+    <a class="btn btn-primary" href="./tasks" role="button">Home</a><br>
+    <a class="btn btn-primary" href="./view_group_members?id={{group_id}}" role="button">{{groupname}}'s Members</a>
+    <a class="btn btn-primary" href="./view_group_tasks?id={{group_id}}" role="button">{{groupname}}'s Tasks</a><br>
+    <h3>Tasks</h3>
+    <table class="table" >
+      <thead>
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">Title</th>
+          <th scope="source">Source</th>
+        </tr>
+      </thead>
+      <tbody id="tasks">
+
+      </tbody>
+    </table>
+    {% if can_change_task %}
+      <h3>Add Task To Group</h3>
+      <input type="text" class="form-control" id="new_task" placeholder="Title of New Task"/>
+      <button type="button" class="btn btn-primary" id="add_task">Add</button>
+      <small id="message_task" class="form-text text-muted"></small>
+    {% endif %}
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script type="module">
+        async function postData(url = '', data = {}) {
+            let formData = new FormData();
+            for (const [key, value] of Object.entries(data)) formData.append(key, value);
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData
+            });
+            return response.json();
+        }
+
+        if (document.getElementById("add_task")) {
+          document.getElementById("add_task").onclick = () => {
+            let task_title = document.getElementById("new_task").value;
+
+            postData("./add_task_to_group", {task_title: task_title, group_id: document.getElementById("group_id").innerText})
+              .then((data) => {
+                  if (data["status"]) window.location.href=window.location.href;
+                  else document.getElementById("message_task").innerText = data["message"];
+              });
+          }
+        }
+
+        postData("./get_tasks_in_group", {group_id: document.getElementById("group_id").innerText})
+        .then(data => {
+          let table = document.getElementById("tasks");
+          data["result"].forEach(r => {
+            let row = document.createElement("tr");
+            let box1 = document.createElement("td");
+            box1.innerText = r["id"];
+            let box2 = document.createElement("td");
+            let viewLink = document.createElement("a");
+            viewLink.innerHTML = r["title"];
+            viewLink.setAttribute("class", "btn");
+            viewLink.setAttribute("href", "/view_task?id="+r["id"]);
+            box2.append(viewLink);
+            let box3 = document.createElement("td");
+            box3.innerText = r["source"];
+            row.appendChild(box1);
+            row.appendChild(box2);
+            row.appendChild(box3);
+            table.appendChild(row);
+          });
+        });
+
+    </script>
+  </body>
+</html>

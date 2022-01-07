@@ -8,33 +8,19 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
-    <title>Tasks - VietSpeak</title>
+    <title>Groups - VietSpeak</title>
   </head>
   <body>
 
     <h1>Hello {{ username }}!</h1>
-    <a class="btn btn-danger" href="./logout" role="button">Logout</a><br>
-    <a class="btn btn-primary" href="./tasks" role="button">Home</a>
+    <a class="btn btn-primary" href="./logout" role="button">Logout</a>
     <h2>My Groups</h2>
     <div id="group_names">
     </div>
     <h2>Invitations</h2>
     <div id="invitations">
     </div>
-    <a class="btn btn-primary" href="./create_group_page" role="button">Create A Group</a>
-    <h2>My Tasks</h2> 
-    <table class="table" >
-      <thead>
-        <tr>
-          <th scope="col">ID</th>
-          <th scope="col">Title</th>
-        </tr>
-      </thead>
-      <tbody id="tasks">
-
-      </tbody>
-    </table>
-    <a class="btn btn-primary" href="./create_task_page" role="button">Create A Task</a>
+    </table> 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
@@ -56,7 +42,7 @@
           data["result"].forEach( (e) => {
               let listOfGroupNames = document.getElementById("group_names");
               let newLink = document.createElement("a");
-              newLink.href = "./view_group_members?id=" + e["id"];
+              newLink.href = "./view_group?id=" + e["id"];
               newLink.innerText = e["name"];
               listOfGroupNames.appendChild(newLink);
               listOfGroupNames.appendChild(document.createElement("br"));
@@ -108,6 +94,15 @@
             });
         });
 
+        document.getElementById("upload_file").onclick = () => {
+          const fileField = document.querySelector('input[type="file"]');
+
+          postData("upload_file", {"file": fileField.files[0]})
+          .then((response) => {
+            console.log(response);
+          })
+        }
+
         postData("./get_tasks_created_by_user")
         .then((data) => {
           let table = document.getElementById("tasks");
@@ -117,13 +112,21 @@
             let box1 = document.createElement("td");
             box1.innerText = r["id"];
             let box2 = document.createElement("td");
+            box2.innerText = r["title"];
+            let box3 = document.createElement("td");
             let viewLink = document.createElement("a");
-            viewLink.innerHTML = r["title"];
+            viewLink.innerHTML = "View Task";
             viewLink.setAttribute("class", "btn");
             viewLink.setAttribute("href", "/view_task?id="+r["id"]);
-            box2.append(viewLink);
+            let editLink = document.createElement("a");
+            editLink.innerHTML = "Edit Task";
+            editLink.setAttribute("class", "btn");
+            editLink.setAttribute("href", "/edit_task?id="+r["id"]);
+            box3.appendChild(viewLink);
+            box3.appendChild(editLink);
             row.appendChild(box1);
             row.appendChild(box2);
+            row.appendChild(box3);
             table.appendChild(row);
           })
         });

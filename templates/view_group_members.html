@@ -13,14 +13,18 @@
   </head>
   <body>
     <h1>Hello {{ username }}!</h1>
-    <a class="btn btn-primary" href="./logout" role="button">Logout</a>
-    <h2>Group {{ groupname }}</h2>
+    <a class="btn btn-danger" href="./logout" role="button">Logout</a><br>
+    <a class="btn btn-primary" href="./tasks" role="button">Home</a><br>
+    <a class="btn btn-primary" href="./view_group_members?id={{group_id}}" role="button">{{groupname}}'s Members</a>
+    <a class="btn btn-primary" href="./view_group_tasks?id={{group_id}}" role="button">{{groupname}}'s Tasks</a><br>
     <h3>Members</h3>
     <div id="members">
     </div>
-    <input type="text" class="form-control" id="new_member" placeholder="New Member"/>
-    <button type="button" class="btn btn-primary" id="invite_member">Invite</button>
-    <small id="message" class="form-text text-muted"></small>
+    {% if can_change_member %}
+      <input type="text" class="form-control" id="new_member" placeholder="New Member"/>
+      <button type="button" class="btn btn-primary" id="invite_member">Invite</button>
+      <small id="message_member" class="form-text text-muted"></small>
+    {% endif %}
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
@@ -41,21 +45,22 @@
         .then((data) => {
           data["result"].forEach( (e) => {
               let listOfMemberNames = document.getElementById("members");
-              let newMember = document.createElement("p");
+              let newMember = document.createElement("label");
               newMember.innerText = e["name"];
               listOfMemberNames.appendChild(newMember);
               listOfMemberNames.appendChild(document.createElement("br"));
             });
         });
 
-
-        document.getElementById("invite_member").onclick = () => {
-            let username = document.getElementById("new_member").value;
-            postData("./invite_member", {username: username, group_id: document.getElementById("group_id").innerText})
-            .then((data) => {
-                if (data["status"]) window.location.href=window.location.href;
-                else document.getElementById("message").innerText = "This user has been invited"
-            });
+        if (document.getElementById("invite_member")) {
+          document.getElementById("invite_member").onclick = () => {
+              let username = document.getElementById("new_member").value;
+              postData("./invite_member", {username: username, group_id: document.getElementById("group_id").innerText})
+              .then((data) => {
+                  if (data["status"]) window.location.href=window.location.href;
+                  else document.getElementById("message_member").innerText = "This user has been invited"
+              });
+          }
         }
 
     </script>

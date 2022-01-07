@@ -13,7 +13,12 @@
   <body>
 
     <h1>Hello {{ username }}!</h1>
-    <a class="btn btn-primary" href="./logout" role="button">Logout</a>
+    <a class="btn btn-danger" href="./logout" role="button">Logout</a><br>
+    <a class="btn btn-primary" href="./tasks" role="button">Home</a><br>
+    {% if group_id %}
+    <a class="btn btn-primary" href="./view_group_members?id={{group_id}}" role="button">{{groupname}}'s Members</a>
+    <a class="btn btn-primary" href="./view_group_tasks?id={{group_id}}" role="button">{{groupname}}'s Tasks</a><br>
+    {% endif %}
     <h2>Create Task</h2>
     <form>
         <input type="text" class="form-control" id="title" placeholder="Title"/>
