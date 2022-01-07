@@ -605,6 +605,38 @@ def submit():
         "status": True
     })
 
+@app.route("/get_submissions", methods=accepted_methods)
+@login_required
+def get_submissions():
+    user_id = session.get("user_id")
+    task_id = int(request.values.get("task_id"))
+
+    if not can_user_access_task(user_id, task_id):
+        return redirect(url_for("logout"))
+    
+    query_str = """
+        SELECT ROWID as id, CreationTime as time, CurrentStatus as status, Score as score
+        FROM Submissions
+        WHERE UserID = ? AND TaskID = ?
+        ORDER BY CreationTime DESC
+        LIMIT 5
+    """
+
+    r = query_db(query_str, (user_id, task_id))
+
+    total_array = []
+    for x in r:
+        total_array.append({
+            "id": x["id"],
+            "time": x["time"],
+            "status": x["status"],
+            "score": x["score"]
+        })
+    
+    return jsonify({
+        "result": total_array
+    });
+
 @app.teardown_appcontext
 def close_connection(exception):
     db = getattr(g, '_database', None)

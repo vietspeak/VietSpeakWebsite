@@ -29,6 +29,19 @@
     <h2>Submit</h2>
     Audio File: <input type="file" class="form-control-file" id="submission_file"/>
     <button type="button" class="btn btn-primary" id="submit_task">Submit</button>
+    <h2>Recent Submissions</h2>
+    <table class="table" >
+        <thead>
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Time</th>
+            <th scope="col">Status</th>
+            <th scope="col">Score</th>
+          </tr>
+        </thead>
+        <tbody id="submissions">  
+        </tbody>
+    </table>
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
@@ -96,6 +109,33 @@
                 if (data["status"]) window.location.href = window.location.href;
             })
         }
+
+        postData("/get_submissions", {"task_id": task_id})
+        .then(data => {
+            let table = document.getElementById("submissions");
+
+            function convertTime(unix_time) {
+                const event = new Date(unix_time * 1000)
+                return event.toString();
+            }
+            data["result"].forEach((r) => {
+                let row = document.createElement("tr");
+                let box1 = document.createElement("td");
+                box1.innerText = r["id"];
+                let box2 = document.createElement("td");
+                box2.innerText = convertTime(r["time"]);
+                let box3 = document.createElement("td");
+                if (r["status"] == 1) box3.innerText = "Evaluating";
+                else box3.innerText = "Graded";
+                let box4 = document.createElement("td");
+                box4.innerText = r["score"];
+                row.appendChild(box1);
+                row.appendChild(box2);
+                row.appendChild(box3);
+                row.appendChild(box4);
+                table.appendChild(row);
+            });
+        });
 
         
     </script>
