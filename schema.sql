@@ -37,12 +37,12 @@ CREATE TABLE AudioFiles (
 CREATE TABLE Tasks (
     AuthorID INTEGER,
     Title TEXT,
-    Difficulty INTEGER,
     Transcript TEXT,
-    FileID INTEGER
+    FileID INTEGER,
     AudioLink TEXT,
     AudioTimeBegin INTEGER,
     AudioTimeEnd INTEGER,
+    NumberOfSyllables INTEGER,
     CurrentStatus INTEGER,
     CreationTime REAL DEFAULT ((julianday('now') - 2440587.5)*86400.0),
     LastUpdated REAL DEFAULT ((julianday('now') - 2440587.5)*86400.0),
@@ -54,12 +54,12 @@ CREATE TABLE Tasks (
 CREATE TABLE Submissions (
     UserID INTEGER,
     TaskID INTEGER,
-    FileID INTEGER
+    FileID INTEGER,
     CurrentStatus INTEGER,
-    Transcript TEXT,
+    Feedback TEXT,
     Score REAL,
     CreationTime REAL DEFAULT ((julianday('now') - 2440587.5)*86400.0),
-    FOREIGN KEY(FileID) REFERENCES AudioFile(ROWID) ON DELETE CASCADE
+    FOREIGN KEY (FileID) REFERENCES AudioFile(ROWID) ON DELETE CASCADE,
     FOREIGN KEY (UserID) REFERENCES Users(ROWID) ON DELETE CASCADE,
     FOREIGN KEY (TaskID) REFERENCES Tasks(ROWID) ON DELETE CASCADE
 );

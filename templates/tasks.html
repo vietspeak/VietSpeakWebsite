@@ -20,10 +20,24 @@
     <h2>Invitations</h2>
     <div id="invitations">
     </div>
-    <a class="btn btn-primary" href="./create_group_page" role="button">Create A New Group</a>
+    <a class="btn btn-primary" href="./create_group_page" role="button">Create A Group</a>
     <h2>Upload Files (for testing)</h2>
     Audio File: <input type="file" class="form-control-file" id="audio_file"/>
-    <button type="button" class="btn btn-primary" id="upload_file">Upload</button>
+    <button type="button" class="btn btn-primary" id="upload_file">Upload</button><br>
+    <a class="btn btn-primary" href="./create_task_page" role="button">Create A Task</a>
+    <h2>Your Tasks</h2> 
+    <table class="table" >
+      <thead>
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">Title</th>
+          <th scope="col">Action</th>
+        </tr>
+      </thead>
+      <tbody id="tasks">
+
+      </tbody>
+    </table> 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
@@ -105,6 +119,36 @@
             console.log(response);
           })
         }
+
+        postData("./get_tasks_created_by_user")
+        .then((data) => {
+          let table = document.getElementById("tasks");
+
+          data["result"].forEach((r) => {
+            let row = document.createElement("tr");
+            let box1 = document.createElement("td");
+            box1.innerText = r["id"];
+            let box2 = document.createElement("td");
+            box2.innerText = r["title"];
+            let box3 = document.createElement("td");
+            let viewLink = document.createElement("a");
+            viewLink.innerHTML = "View Task";
+            viewLink.setAttribute("class", "btn");
+            viewLink.setAttribute("href", "/view_task?id="+r["id"]);
+            let editLink = document.createElement("a");
+            editLink.innerHTML = "Edit Task";
+            editLink.setAttribute("class", "btn");
+            editLink.setAttribute("href", "/edit_task?id="+r["id"]);
+            box3.appendChild(viewLink);
+            box3.appendChild(editLink);
+            row.appendChild(box1);
+            row.appendChild(box2);
+            row.appendChild(box3);
+            table.appendChild(row);
+          })
+        });
+
+
     </script>
   </body>
 </html>

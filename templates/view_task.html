@@ -8,13 +8,14 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
-    <title>Create A Task - VietSpeak</title>
+    <title>Edit Task - VietSpeak</title>
+    <div id="task_id" hidden>{{task_id}}</div>
   </head>
   <body>
 
     <h1>Hello {{ username }}!</h1>
     <a class="btn btn-primary" href="./logout" role="button">Logout</a>
-    <h2>Create Task</h2>
+    <h2>Edit Task</h2>
     <form>
         <input type="text" class="form-control" id="title" placeholder="Title"/>
         <textarea class="form-control" id="transcript" rows="3" placeholder="Transcript"></textarea>
@@ -23,8 +24,11 @@
         <input type="text" class="form-control" id="end_time" placeholder="End Time (in seconds)"/>
         Audio File: <input type="file" class="form-control-file" id="audio_file"/>
         <input type="text" class="form-control" id="source" placeholder="Source"/>
-        <button type="button" class="btn btn-primary" id="create_task">Create A Task</button>
+        <button type="button" class="btn btn-primary" id="edit_task">Edit</button>
     </form>
+    <h2>Submit</h2>
+    Audio File: <input type="file" class="form-control-file" id="submission_file"/>
+    <button type="button" class="btn btn-primary" id="submit_task">Submit</button>
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
@@ -41,10 +45,27 @@
             return response.json();
         }
 
-        document.getElementById("create_task").onclick = () => {
+        let task_id = document.getElementById("task_id").innerText;
+
+        postData("/get_task", {"task_id": task_id})
+        .then((data) => {
+            if (data["status"]) {
+                console.log(data);
+                document.getElementById("title").value = data["title"];
+                document.getElementById("transcript").value = data["transcript"];
+                document.getElementById("audio_link").value = data["audio_link"];
+                document.getElementById("start_time").value = data["start_time"];
+                document.getElementById("end_time").value = data["end_time"];
+                document.getElementById("source").value = data["source"];
+            }
+        });
+
+
+        document.getElementById("edit_task").onclick = () => {
             const fileField = document.querySelector('input[type="file"]');
 
             let data = {
+                "task_id": task_id,
                 "title": document.getElementById("title").value,
                 "transcript": document.getElementById("transcript").value,
                 "audio_link": document.getElementById("audio_link").value,
@@ -54,11 +75,29 @@
                 "source": document.getElementById("source").value
             }
 
-            postData("/create_task", data)
+            console.log(data);
+
+            postData("/update_task", data)
             .then(data => {
-                if (data["status"]) window.location.href = "./tasks";
+                if (data["status"]) window.location.href = window.location.href;
             });
         }
+
+        document.getElementById("submit_task").onclick = () => {
+            const fileField = document.getElementById("submission_file");
+
+            let data = {
+                "task_id": task_id,
+                "audio_file": fileField.files[0]
+            }
+
+            postData("/submit", data)
+            .then(data => {
+                if (data["status"]) window.location.href = window.location.href;
+            })
+        }
+
+        
     </script>
   </body>
 </html>

@@ -1,8 +1,7 @@
-import re
 import sqlite3
 import json
-import time
 import io
+import eng_to_ipa as ipa
 from functools import wraps
 from flask import Flask, render_template, request, g, session, redirect, url_for
 from flask.json import jsonify
@@ -17,6 +16,12 @@ app = Flask(__name__)
 app.secret_key = constant_data["SESSION_SECRET_KEY"]
 bcrypt = Bcrypt(app)
 accepted_methods = ["POST", "GET"]
+
+def to_int(s):
+    try:
+        return int(s)
+    except ValueError:
+        return 0
 
 def init_db():
     with app.app_context():
@@ -104,6 +109,24 @@ def get_group_name(group_id):
         return None
     else:
         return r[0]["GroupName"]
+
+def can_user_access_task(user_id, task_id):
+    query_str = """
+        SELECT ROWID as id
+        FROM Tasks
+        WHERE ROWID = ? AND (
+            AuthorID = ? OR
+            AuthorID IN (
+                SELECT UserGroups.UserID as AuthorID
+                FROM UserGroups, TaskGroups
+                WHERE TaskGroups.GroupID = UserGroups.GroupID AND TaskGroups.TaskID = ? AND UserGroups.IsMember = 1
+            )
+        )
+    """
+
+    r = query_db(query_str, (task_id, user_id, task_id), True)
+
+    return r is not None
 
 
 def login_required(f):
@@ -358,34 +381,229 @@ def logout():
 
 
 @app.route("/create_task", methods=accepted_methods)
+@login_required
 def create_task():
-    return jsonify({
-        "status": False
-    })
+    
+    author_id = session.get("user_id")
+    title = request.values.get("title", "")
+    transcript = request.values.get("transcript", "")
+    file = request.files.get("audio_file", None)
 
-@app.route("/upload_file", methods=accepted_methods)
-def upload_file():
-    file = request.files.get("file", "")
-    fake_file = io.BytesIO()
-    file.save(fake_file)
+    audio_link = request.values.get("audio_link", "")
+    audio_time_begin = to_int(request.values.get("audio_time_begin", 0))
+    audio_time_end = to_int(request.values.get("audio_time_end", 0))
+    number_of_syllables = ipa.syllable_count(transcript)
+
+    if isinstance(number_of_syllables, list):
+        number_of_syllables = sum(number_of_syllables)
+
+    source = request.values.get("source", "")
+
+    if title == "" or transcript == "" or file is None:
+        return jsonify({
+            "status": False,
+            "message": "The title/transcript/audio file is not provided."
+        })
 
     query_str = """
         INSERT INTO AudioFiles (AudioFile) VALUES (?)
     """
 
+    fake_file = io.BytesIO()
+    file.save(fake_file)
     query_db(query_str, (fake_file.getvalue(), ))
 
     query_str = """
         SELECT last_insert_rowid() as id FROM AudioFiles
     """
 
-    r = query_db(query_str)
+    file_id = query_db(query_str)[0]["id"]
+
+    query_str = """
+        INSERT INTO Tasks (AuthorID, Title, Transcript, FileID, AudioLink, AudioTimeBegin, AudioTimeEnd, NumberOfSyllables, CurrentStatus, Source)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """
+
+    query_db(query_str, (author_id, title, transcript, file_id, audio_link, audio_time_begin, audio_time_end, number_of_syllables, 0, source))
 
     return jsonify({
-        "file_id": r[0]["id"],
-        "status": True
+        "status": True,
     })
 
+@app.route("/get_tasks_created_by_user", methods=accepted_methods)
+@login_required
+def get_tasks_created_by_user():
+    user_id = session.get("user_id")
+
+    query_str = """
+        SELECT ROWID as id, Title as title
+        FROM Tasks
+        WHERE AuthorID = ?
+    """
+
+    r = query_db(query_str, (user_id, ))
+
+    total_array = []
+    for x in r:
+        total_array.append({"id": x["id"], "title": x["title"]})
+    
+    return jsonify({
+        "result": total_array
+    })
+
+@app.route("/get_task", methods=accepted_methods)
+@login_required
+def get_task():
+    user_id = session.get("user_id")
+
+    task_id = to_int(request.values.get("task_id", ""))
+
+    query_str = """
+        SELECT ROWID as id, Title, Transcript, AudioLink, AudioTimeBegin, AudioTimeEnd, Source
+        FROM Tasks
+        WHERE ROWID = ? AND (
+            AuthorID = ? OR
+            AuthorID IN (
+                SELECT UserGroups.UserID as AuthorID
+                FROM UserGroups, TaskGroups
+                WHERE TaskGroups.GroupID = UserGroups.GroupID AND TaskGroups.TaskID = ? AND UserGroups.IsMember = 1
+            )
+        )
+    """
+
+    r = query_db(query_str, (task_id, user_id, task_id), True)
+
+    if r is None:
+        return jsonify({
+            "status": False
+        })
+    
+    return jsonify({
+        "status": True,
+        "id": r["id"],
+        "title": r["Title"],
+        "transcript": r["Transcript"],
+        "audio_link": r["AudioLink"],
+        "start_time": r["AudioTimeBegin"],
+        "end_time": r["AudioTimeEnd"],
+        "source": r["Source"]
+    })
+
+@app.route("/view_task", methods=accepted_methods)
+@login_required
+def view_task():
+    task_id = to_int(request.values.get("id"))
+    username = session.get("username", "")
+
+    return render_template("view_task.html", username=username, task_id=task_id)
+
+@app.route("/update_task", methods=accepted_methods)
+@login_required
+def update_task():
+    user_id = session.get("user_id")
+    task_id = to_int(request.values.get("task_id"))
+    title = request.values.get("title", "")
+    transcript = request.values.get("transcript", "")
+    file = request.files.get("audio_file", None)
+    audio_link = request.values.get("audio_link", "")
+    audio_time_begin = to_int(request.values.get("audio_time_begin", 0))
+    audio_time_end = to_int(request.values.get("audio_time_end", 0))
+    number_of_syllables = ipa.syllable_count(transcript)
+
+    if isinstance(number_of_syllables, list):
+        number_of_syllables = sum(number_of_syllables)
+
+    source = request.values.get("source", "")
+
+
+    if not can_user_access_task(user_id, task_id):
+        return redirect(url_for("logout"))
+    
+
+    if title == "" or transcript == "":
+        return jsonify({
+            "status": False,
+            "message": "The title/transcript is not provided."
+        })
+
+    
+    if file is not None:
+        query_str = """
+            INSERT INTO AudioFiles (AudioFile) VALUES (?)
+        """
+
+        fake_file = io.BytesIO()
+        file.save(fake_file)
+        query_db(query_str, (fake_file.getvalue(), ))
+
+        query_str = """
+            SELECT last_insert_rowid() as id FROM AudioFiles
+        """
+
+        file_id = query_db(query_str)[0]["id"]
+
+        query_str = """
+            UPDATE Tasks
+            SET FileID = ?, CurrentStatus = 1
+            WHERE ROWID = ?
+        """
+
+        query_db(query_str, (file_id, task_id))
+
+    
+    query_str = """
+        UPDATE Tasks
+        SET Title = ?, Transcript = ?, AudioLink = ?, AudioTimeBegin = ?, AudioTimeEnd = ?, NumberOfSyllables = ?, Source = ?
+        WHERE ROWID = ?
+    """
+
+    query_db(query_str, (title, transcript, audio_link, audio_time_begin, audio_time_end, number_of_syllables, source, task_id))
+
+    return jsonify({
+        "status": True,
+    })
+
+def upload_file(file):
+    fake_file = io.BytesIO()
+    file.save(fake_file)
+
+    query_str = """
+        INSERT INTO AudioFiles (AudioFile) VALUES (?)
+    """
+    query_db(query_str, (fake_file.getvalue(), ))
+    query_str = """
+        SELECT last_insert_rowid() as id FROM AudioFiles
+    """
+    r = query_db(query_str, one=True)
+    return r["id"]
+
+@app.route("/submit", methods=accepted_methods)
+@login_required
+def submit():
+    user_id = session.get("user_id")
+    task_id = to_int(request.values.get("task_id", ""))
+    if not can_user_access_task(user_id, task_id):
+        return redirect(url_for("logout"))
+    
+    file = request.files.get("audio_file", None)
+
+    if file is None:
+        return jsonify({
+            "status": False,
+        })
+    
+    file_id = upload_file(file)
+
+    query_str = """
+        INSERT INTO Submissions (UserID, TaskID, FileID, CurrentStatus)
+        VALUES (?, ?, ?, ?)
+    """
+
+    query_db(query_str, (user_id, task_id, file_id, 1))
+
+    return jsonify({
+        "status": True
+    })
 
 @app.teardown_appcontext
 def close_connection(exception):
