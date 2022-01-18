@@ -289,7 +289,7 @@ def get_members_in_group():
         }
     
     query_str = """
-        SELECT Users.ROWID as id, Users.username as name
+        SELECT Users.ROWID as id, Users.username as name, UserGroups.CanChangeMember as can_change_member, UserGroups.CanChangeTask as can_change_task
         FROM Users, UserGroups
         WHERE UserGroups.GroupID = ? AND UserGroups.UserID = Users.ROWID AND UserGroups.IsMember = 1
     """
@@ -300,7 +300,9 @@ def get_members_in_group():
     for x in r:
         total_array.append({
             "id": x["id"],
-            "name": x["name"]
+            "name": x["name"],
+            "can_change_member": x["can_change_member"],
+            "can_change_task": x["can_change_task"]
         })
     
     return {
@@ -443,7 +445,7 @@ def get_tasks_created_by_user():
     user_id = session.get("user_id")
 
     query_str = """
-        SELECT ROWID as id, Title as title
+        SELECT ROWID as id, Title as title, Source as source
         FROM Tasks
         WHERE AuthorID = ?
     """
@@ -452,7 +454,31 @@ def get_tasks_created_by_user():
 
     total_array = []
     for x in r:
-        total_array.append({"id": x["id"], "title": x["title"]})
+        total_array.append({"id": x["id"], "title": x["title"], "source": x["source"]})
+    
+    return jsonify({
+        "result": total_array
+    })
+
+@app.route("/search_tasks_created_by_user", methods=accepted_methods)
+@login_required
+def search_tasks_created_by_user():
+    user_id = session.get("user_id")
+
+    title = request.values.get("title", "")
+    source = request.values.get("source", "")
+
+    query_str = """
+        SELECT ROWID as id, Title as title, Source as source
+        FROM Tasks
+        WHERE AuthorID = ? AND Title LIKE ? AND Source LIKE ?
+    """
+
+    r = query_db(query_str, (user_id, "%" + title + "%", "%" + source + "%"))
+
+    total_array = []
+    for x in r:
+        total_array.append({"id": x["id"], "title": x["title"], "source": x["source"]})
     
     return jsonify({
         "result": total_array
@@ -799,6 +825,71 @@ def view_group_members():
                             groupname = session.get("groupname"), 
                             group_id = group_id,
                             can_change_member = can_change_member)
+
+@app.route("/change_group_member_rights", methods=accepted_methods)
+@login_required
+def change_group_member_rights():
+    user_id = session.get("user_id")
+    group_id = session.get("group_id")
+    group_member_id = request.values.get("user_id", 0)
+    group_member_change_task = request.values.get("can_change_task", None)
+    group_member_change_members = request.values.get("can_change_member", None)
+
+    can_change_member = can_user_change_member(user_id, group_id)
+
+    if not (is_user_in_group(user_id, group_id) and is_user_in_group(group_member_id, group_id) and can_change_member):
+        return redirect(url_for("logout"))
+    
+
+    if group_member_change_task is not None:
+        group_member_change_task = 1 if group_member_change_task == "true" else 0
+        query_str = """
+            UPDATE UserGroups
+            SET CanChangeTask = ?
+            WHERE UserID = ? AND GroupID = ?
+        """
+        query_db(query_str, (group_member_change_task, group_member_id, group_id))
+
+    if group_member_change_members is not None:
+        group_member_change_members = 1 if group_member_change_members == "true" else 0
+        query_str = """
+            UPDATE UserGroups
+            SET CanChangeMember = ?
+            WHERE UserID = ? AND GroupID = ?
+        """
+        query_db(query_str, (group_member_change_members, group_member_id, group_id))
+
+    return jsonify({
+        "status": True
+    })
+
+@app.route("/get_invited_members", methods=accepted_methods)
+@login_required
+def get_invited_members():
+    user_id = session.get("user_id")
+    group_id = session.get("group_id")
+
+    if not is_user_in_group(user_id, group_id):
+        return redirect(url_for("logout"))
+    
+    query_str = """
+        SELECT Users.ROWID as id, Users.username as name
+        FROM Users, UserGroups
+        WHERE Users.ROWID = UserGroups.UserID AND UserGroups.IsInvited = 1
+    """
+
+    r = query_db(query_str)
+
+    total = []
+    for x in r:
+        total.append({
+            "id": x["id"],
+            "name": x["name"]
+        })
+    
+    return jsonify({
+        "result": total
+    })
 
 @app.route("/view_group_tasks", methods=accepted_methods)
 @login_required

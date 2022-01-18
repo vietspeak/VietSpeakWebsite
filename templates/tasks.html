@@ -23,18 +23,33 @@
     </div>
     <a class="btn btn-primary" href="./create_group_page" role="button">Create A Group</a>
     <h2>My Tasks</h2> 
+    <a class="btn btn-primary" href="./create_task_page" role="button">Create A Task</a>
+
+    <div class="form-group row">
+      <div>
+        <input type="text" class="form-control" id="search_title" placeholder="Title">
+      </div>
+      <div>
+        <input type="text" class="form-control" id="search_source" placeholder="Source">
+      </div>
+      <div>
+        <button type="button" class="btn btn-primary" id="search">Search</button>
+      </div>
+    </div> 
+
     <table class="table" >
       <thead>
         <tr>
           <th scope="col">ID</th>
           <th scope="col">Title</th>
+          <th scope="col">Source</th>
         </tr>
       </thead>
       <tbody id="tasks">
 
       </tbody>
     </table>
-    <a class="btn btn-primary" href="./create_task_page" role="button">Create A Task</a>
+    
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
@@ -122,11 +137,42 @@
             viewLink.setAttribute("class", "btn");
             viewLink.setAttribute("href", "/view_task?id="+r["id"]);
             box2.append(viewLink);
+            let box3 = document.createElement("td");
+            box3.innerHTML = r["source"];
             row.appendChild(box1);
             row.appendChild(box2);
+            row.appendChild(box3);
             table.appendChild(row);
           })
         });
+
+        document.getElementById("search").onclick = () => {
+          let title = document.getElementById("search_title").value;
+          let source = document.getElementById("search_source").value;
+          postData('/search_tasks_created_by_user', {"title": title, "source": source})
+            .then(data => {
+              let table = document.getElementById("tasks");
+              table.innerHTML = "";
+              data["result"].forEach((r) => {
+                let row = document.createElement("tr");
+                let box1 = document.createElement("td");
+                box1.innerText = r["id"];
+                let box2 = document.createElement("td");
+                let viewLink = document.createElement("a");
+                viewLink.innerHTML = r["title"];
+                viewLink.setAttribute("class", "btn");
+                viewLink.setAttribute("href", "/view_task?id="+r["id"]);
+                box2.append(viewLink);
+                let box3 = document.createElement("td");
+                box3.innerHTML = r["source"];
+                row.appendChild(box1);
+                row.appendChild(box2);
+                row.appendChild(box3);
+                table.appendChild(row);
+              });
+            });
+
+        }
 
 
     </script>
