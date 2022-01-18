@@ -19,14 +19,34 @@
     <a class="btn btn-primary" href="./view_group_members?id={{group_id}}" role="button">{{groupname}}'s Members</a>
     <a class="btn btn-primary" href="./view_group_tasks?id={{group_id}}" role="button">{{groupname}}'s Tasks</a><br>
     <h3>Members</h3>
+    <div class="form-group row">
+      <div>
+        <button type="button" class="btn btn-primary" id="members_prev_page">Previous 10</button>
+        <button type="button" class="btn btn-primary" id="members_next_page">Next 10</button>
+      </div>
+    </div> 
+    <div class="form-group row">
+      <div>
+        <input type="text" class="form-control" id="search_username" placeholder="Member name">
+      </div>
+      <div>
+        <button type="button" class="btn btn-primary" id="search_member">Search</button>
+      </div>
+    </div>
     <table id="members">
     </table>
     <div id="invited_member_list">
     </div>
     {% if can_change_member %}
-      <input type="text" class="form-control" id="new_member" placeholder="New Member"/>
-      <button type="button" class="btn btn-primary" id="invite_member">Invite</button>
-      <small id="message_member" class="form-text text-muted"></small>
+    <div class="form-group row">
+      <div>
+        <input type="text" class="form-control" id="new_member" placeholder="New Member"/>
+      </div>
+      <div>
+        <button type="button" class="btn btn-primary" id="invite_member">Invite</button>
+        <small id="message_member" class="form-text text-muted"></small>
+      </div>
+    </div>
     {% endif %}
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
@@ -44,78 +64,102 @@
             return response.json();
         }
 
+        let member_offset = 0;
+
         function updateMemberTable() {
-          postData("./search_members_in_group", {group_id: document.getElementById("group_id").innerText})
-        .then((data) => {
-          let can_change_member = document.getElementById("can_change_member").innerText;
-          data["result"].forEach( (e) => {
-              let listOfMemberNames = document.getElementById("members");
-              let newMember = document.createElement("tr");
-              let nameBox = document.createElement("td");
-              nameBox.innerText = e["name"];
-              newMember.appendChild(nameBox);
+          let username = document.getElementById("search_username").value;
+          postData("./search_members_in_group", {group_id: document.getElementById("group_id").innerText, offset: member_offset, username: username})
+          .then((data) => {
+            let can_change_member = document.getElementById("can_change_member").innerText;
+            let listOfMemberNames = document.getElementById("members");
+            listOfMemberNames.innerHTML = "";
+            data["result"].forEach( (e) => {
+                let newMember = document.createElement("tr");
+                let nameBox = document.createElement("td");
+                nameBox.innerText = e["name"];
+                newMember.appendChild(nameBox);
 
-              if (can_change_member === "True") {
-                let canChangeMember = document.createElement("td");
+                if (can_change_member === "True") {
+                  let canChangeMember = document.createElement("td");
 
-                let canChangeMemberInner = document.createElement("select");
-                canChangeMemberInner.className = "custom-select";
-                let option1 = document.createElement("option");
-                option1.innerText = "Can change member list and give members rights";
-                option1.setAttribute("value", 1);
-                if (e["can_change_member"] == 1) option1.setAttribute("selected", "");
-                canChangeMemberInner.appendChild(option1);
-                
-                let option2 = document.createElement("option");
-                option2.innerText = "Cannot change member list or give members rights";
-                option2.setAttribute("value", 0);
-                if (e["can_change_member"] == 0) option2.setAttribute("selected", "");
-                canChangeMemberInner.appendChild(option2);
+                  let canChangeMemberInner = document.createElement("select");
+                  canChangeMemberInner.className = "custom-select";
+                  let option1 = document.createElement("option");
+                  option1.innerText = "Can change member list and give members rights";
+                  option1.setAttribute("value", 1);
+                  if (e["can_change_member"] == 1) option1.setAttribute("selected", "");
+                  canChangeMemberInner.appendChild(option1);
+                  
+                  let option2 = document.createElement("option");
+                  option2.innerText = "Cannot change member list or give members rights";
+                  option2.setAttribute("value", 0);
+                  if (e["can_change_member"] == 0) option2.setAttribute("selected", "");
+                  canChangeMemberInner.appendChild(option2);
 
-                canChangeMemberInner.onchange = () => {
-                  let can_change_member = canChangeMemberInner.value == 1 ? true : false;
-                  postData("/change_group_member_rights", {"user_id": e["id"], "can_change_member": can_change_member})
-                  .then((status) => {
-                    if (status["status"]) alert("Right for member " + e["name"] + " has been changed.");
-                  })
+                  canChangeMemberInner.onchange = () => {
+                    let can_change_member = canChangeMemberInner.value == 1 ? true : false;
+                    postData("/change_group_member_rights", {"user_id": e["id"], "can_change_member": can_change_member})
+                    .then((status) => {
+                      if (status["status"]) alert("Right for member " + e["name"] + " has been changed.");
+                      else {
+                        alert(status["message"]);
+                        canChangeMemberInner.value = 1 - canChangeMemberInner.value;
+                      }});
+                  }
+                  canChangeMember.appendChild(canChangeMemberInner);
+                  newMember.appendChild(canChangeMember);
+
+                  let canChangeTask = document.createElement("td");
+                  let canChangeTaskInner = document.createElement("select");
+                  canChangeTaskInner.className = "custom-select";
+                  option1 = document.createElement("option");
+                  option1.setAttribute("value", 1);
+                  option1.innerText = "Can add and remove tasks";
+                  if (e["can_change_task"] == 1) option1.setAttribute("selected", "");
+                  canChangeTaskInner.appendChild(option1);
+                  option2 = document.createElement("option");
+                  option2.setAttribute("value", 0);
+                  option2.innerText = "Cannot add or remove tasks";
+                  if (e["can_change_task"] == 0) option2.setAttribute("selected", "");
+                  canChangeTaskInner.appendChild(option2);
+
+                  canChangeTaskInner.onchange = () => {
+                    let can_change_task = canChangeTaskInner.value == 1 ? true : false;
+                    postData("/change_group_member_rights", {"user_id": e["id"], "can_change_task": can_change_task})
+                    .then((status) => {
+                      if (status["status"]) alert("Right for member " + e["name"] + " has been changed.");
+                      else {
+                        alert(status["message"]);
+                        canChangeMemberInner.value = 1 - canChangeMemberInner.value;
+                      }
+                    })
+                  };
+
+                  canChangeTask.appendChild(canChangeTaskInner);
+                  newMember.appendChild(canChangeTask);
                 }
-                canChangeMember.appendChild(canChangeMemberInner);
-                newMember.appendChild(canChangeMember);
+                
+                listOfMemberNames.appendChild(newMember);
+              });
+          });
+        }
 
-                let canChangeTask = document.createElement("td");
-                let canChangeTaskInner = document.createElement("select");
-                canChangeTaskInner.className = "custom-select";
-                option1 = document.createElement("option");
-                option1.setAttribute("value", 1);
-                option1.innerText = "Can add and remove tasks";
-                if (e["can_change_task"] == 1) option1.setAttribute("selected", "");
-                canChangeTaskInner.appendChild(option1);
-                option2 = document.createElement("option");
-                option2.setAttribute("value", 0);
-                option2.innerText = "Cannot add or remove tasks";
-                if (e["can_change_task"] == 0) option2.setAttribute("selected", "");
-                canChangeTaskInner.appendChild(option2);
+        updateMemberTable();
 
-                canChangeTaskInner.onchange = () => {
-                  let can_change_task = canChangeTaskInner.value == 1 ? true : false;
-                  postData("/change_group_member_rights", {"user_id": e["id"], "can_change_task": can_change_task})
-                  .then((status) => {
-                    if (status["status"]) alert("Right for member " + e["name"] + " has been changed.");
-                  })
-                };
+        document.getElementById("members_prev_page").onclick = () => {
+          member_offset = Math.max(0, member_offset - 10);
+          updateMemberTable();
+        }
 
-                canChangeTask.appendChild(canChangeTaskInner);
-                newMember.appendChild(canChangeTask);
-              }
-              
-              listOfMemberNames.appendChild(newMember);
-            });
-        });
-        
-      }
+        document.getElementById("members_next_page").onclick = () => {
+          member_offset = member_offset + 10;
+          updateMemberTable();
+        }
 
-        
-
+        document.getElementById("search_member").onclick = () => {
+          member_offset = 0;
+          updateMemberTable();
+        }
 
         postData("./get_invited_members", {group_id: document.getElementById("group_id").innerText})
         .then((data) => {

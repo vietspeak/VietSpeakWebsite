@@ -822,7 +822,14 @@ def view_group_members():
 def change_group_member_rights():
     user_id = session.get("user_id")
     group_id = session.get("group_id")
-    group_member_id = request.values.get("user_id", 0)
+    group_member_id = int(request.values.get("user_id", 0))
+
+    if group_member_id == user_id:
+        return jsonify({
+            "status": False,
+            "message": "You cannot change your rights. Please contact someone else."
+        })
+    
     group_member_change_task = request.values.get("can_change_task", None)
     group_member_change_members = request.values.get("can_change_member", None)
 
