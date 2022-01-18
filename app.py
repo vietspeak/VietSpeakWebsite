@@ -439,27 +439,6 @@ def create_task():
         "status": True,
     })
 
-@app.route("/get_tasks_created_by_user", methods=accepted_methods)
-@login_required
-def get_tasks_created_by_user():
-    user_id = session.get("user_id")
-
-    query_str = """
-        SELECT ROWID as id, Title as title, Source as source
-        FROM Tasks
-        WHERE AuthorID = ?
-    """
-
-    r = query_db(query_str, (user_id, ))
-
-    total_array = []
-    for x in r:
-        total_array.append({"id": x["id"], "title": x["title"], "source": x["source"]})
-    
-    return jsonify({
-        "result": total_array
-    })
-
 @app.route("/search_tasks_created_by_user", methods=accepted_methods)
 @login_required
 def search_tasks_created_by_user():
@@ -467,14 +446,15 @@ def search_tasks_created_by_user():
 
     title = request.values.get("title", "")
     source = request.values.get("source", "")
-
+    offset = request.values.get("offset", 0)
     query_str = """
         SELECT ROWID as id, Title as title, Source as source
         FROM Tasks
         WHERE AuthorID = ? AND Title LIKE ? AND Source LIKE ?
+        LIMIT ?, 10
     """
 
-    r = query_db(query_str, (user_id, "%" + title + "%", "%" + source + "%"))
+    r = query_db(query_str, (user_id, "%" + title + "%", "%" + source + "%", offset))
 
     total_array = []
     for x in r:
