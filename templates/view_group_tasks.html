@@ -18,7 +18,26 @@
     <a class="btn btn-primary" href="./view_group_members?id={{group_id}}" role="button">{{groupname}}'s Members</a>
     <a class="btn btn-primary" href="./view_group_tasks?id={{group_id}}" role="button">{{groupname}}'s Tasks</a><br>
     <h3>Tasks</h3>
-    <table class="table" >
+    <div class="form-group row">
+      <div>
+        <input type="text" class="form-control" id="search_title" placeholder="Title">
+      </div>
+      <div>
+        <input type="text" class="form-control" id="search_source" placeholder="Source">
+      </div>
+      <div>
+        <button type="button" class="btn btn-primary" id="search">Search</button>
+      </div>
+    </div>
+
+    <div class="form-group row">
+      <div>
+        <button type="button" class="btn btn-primary" id="search_prev_page">Previous 10</button>
+        <button type="button" class="btn btn-primary" id="search_next_page">Next 10</button>
+      </div>
+    </div>
+
+    <table class="table">
       <thead>
         <tr>
           <th scope="col">ID</th>
@@ -64,27 +83,40 @@
           }
         }
 
-        postData("./get_tasks_in_group", {group_id: document.getElementById("group_id").innerText})
-        .then(data => {
-          let table = document.getElementById("tasks");
-          data["result"].forEach(r => {
-            let row = document.createElement("tr");
-            let box1 = document.createElement("td");
-            box1.innerText = r["id"];
-            let box2 = document.createElement("td");
-            let viewLink = document.createElement("a");
-            viewLink.innerHTML = r["title"];
-            viewLink.setAttribute("class", "btn");
-            viewLink.setAttribute("href", "/view_task?id="+r["id"]);
-            box2.append(viewLink);
-            let box3 = document.createElement("td");
-            box3.innerText = r["source"];
-            row.appendChild(box1);
-            row.appendChild(box2);
-            row.appendChild(box3);
-            table.appendChild(row);
-          });
-        });
+        let task_offset = 0;
+        
+        function updateTaskTable() {
+          let title = document.getElementById("search_title").value;
+          let source = document.getElementById("search_source").value;
+          postData('/search_tasks_in_group', {"title": title, "source": source, offset: task_offset})
+            .then(data => {
+              let table = document.getElementById("tasks");
+              table.innerHTML = "";
+              data["result"].forEach((r) => {
+                let row = document.createElement("tr");
+                let box1 = document.createElement("td");
+                box1.innerText = r["id"];
+                let box2 = document.createElement("td");
+                let viewLink = document.createElement("a");
+                viewLink.innerHTML = r["title"];
+                viewLink.setAttribute("class", "btn");
+                viewLink.setAttribute("href", "/view_task?id="+r["id"]);
+                box2.append(viewLink);
+                let box3 = document.createElement("td");
+                box3.innerHTML = r["source"];
+                row.appendChild(box1);
+                row.appendChild(box2);
+                row.appendChild(box3);
+                table.appendChild(row);
+              });
+            });
+        }
+
+
+        updateTaskTable();
+
+        document.getElementById("search_next_page").onclick = () => { task_offset = task_offset+10; updateTaskTable(); }
+        document.getElementById("search_prev_page").onclick = () => { task_offset = Math.max(0, task_offset-10); updateTaskTable(); }
 
     </script>
   </body>

@@ -44,7 +44,8 @@
             return response.json();
         }
 
-        postData("./get_members_in_group", {group_id: document.getElementById("group_id").innerText})
+        function updateMemberTable() {
+          postData("./search_members_in_group", {group_id: document.getElementById("group_id").innerText})
         .then((data) => {
           let can_change_member = document.getElementById("can_change_member").innerText;
           data["result"].forEach( (e) => {
@@ -110,6 +111,10 @@
               listOfMemberNames.appendChild(newMember);
             });
         });
+        
+      }
+
+        
 
 
         postData("./get_invited_members", {group_id: document.getElementById("group_id").innerText})

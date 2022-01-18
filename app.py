@@ -277,11 +277,13 @@ def create_group():
             "status": False
         })
 
-@app.route("/get_members_in_group", methods=accepted_methods)
+@app.route("/search_members_in_group", methods=accepted_methods)
 @login_required
-def get_members_in_group():
+def search_members_in_group():
     user_id = session.get("user_id")
-    group_id = int(request.values.get("group_id"))
+    group_id = session.get("group_id")
+    name = request.values.get("username", "")
+    offset = request.values.get("offset", 0)
 
     if not is_user_in_group(user_id, group_id):
         return {
@@ -291,10 +293,11 @@ def get_members_in_group():
     query_str = """
         SELECT Users.ROWID as id, Users.username as name, UserGroups.CanChangeMember as can_change_member, UserGroups.CanChangeTask as can_change_task
         FROM Users, UserGroups
-        WHERE UserGroups.GroupID = ? AND UserGroups.UserID = Users.ROWID AND UserGroups.IsMember = 1
+        WHERE UserGroups.GroupID = ? AND UserGroups.UserID = Users.ROWID AND UserGroups.IsMember = 1 AND Users.username LIKE ?
+        LIMIT ?, 10
     """
 
-    r = query_db(query_str, (group_id, ))
+    r = query_db(query_str, (group_id, "%" + name + "%", offset))
 
     total_array = []
     for x in r:
@@ -386,6 +389,9 @@ def invite_member():
 @app.route("/logout", methods=accepted_methods)
 def logout():
     session.pop("username", None)
+    session.pop("user_id", None)
+    session.pop("group_id", None)
+    session.pop("groupname", None)
     return redirect(url_for("home_page"))
 
 
@@ -464,23 +470,28 @@ def search_tasks_created_by_user():
         "result": total_array
     })
 
-@app.route("/get_tasks_in_group", methods=accepted_methods)
+@app.route("/search_tasks_in_group", methods=accepted_methods)
 @login_required
-def get_tasks_in_group():
+def search_tasks_in_group():
     user_id = session.get("user_id")
-    group_id = request.values.get("group_id")
+    group_id = session.get("group_id")
 
     if not is_user_in_group(user_id, group_id):
         return redirect(url_for("logout"))
+    
 
+    title = request.values.get("title", "")
+    source = request.values.get("source", "")
+    offset = request.values.get("offset", 0)
 
     query_str = """
         SELECT Tasks.ROWID as id, Tasks.Title as title, Tasks.Source as source
         FROM Tasks, TaskGroups
-        WHERE Tasks.ROWID = TaskGroups.TaskID AND TaskGroups.GroupID = ?
+        WHERE Tasks.ROWID = TaskGroups.TaskID AND TaskGroups.GroupID = ? AND Tasks.Title LIKE ? AND Tasks.Source LIKE ?
+        LIMIT ?, 10
     """
 
-    r = query_db(query_str, (group_id, ))
+    r = query_db(query_str, (group_id, "%" + title + "%", "%" + source + "%", offset))
 
     total_array = []
     for x in r:

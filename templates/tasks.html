@@ -18,10 +18,19 @@
     <h2>My Groups</h2>
     <div id="group_names">
     </div>
-    <h2>Invitations</h2>
     <div id="invitations">
     </div>
-    <a class="btn btn-primary" href="./create_group_page" role="button">Create A Group</a>
+    <div class="form-group row">
+      <div>
+        <input type="text" class="form-control" id="group_name" placeholder="Group Name"/>
+      </div>
+      <div>
+        <button type="button" class="btn btn-primary" id="create_group">Create</button>
+      </div>
+    </div>
+    
+    
+    <small id="message" class="form-text text-muted"></small>
     <h2>My Tasks</h2> 
     <a class="btn btn-primary" href="./create_task_page" role="button">Create A Task</a>
 
@@ -73,6 +82,15 @@
             return response.json();
         }
 
+        document.getElementById("create_group").onclick = () => {
+            postData("./create_group", {
+                group_name: document.getElementById("group_name").value
+            }).then( (data) => {
+                if (data["status"]) window.location.href = "./tasks";
+                else alert("This group name has been taken.");
+            })
+        }
+
         postData("./get_groups")
         .then((data) => {
           data["result"].forEach( (e) => {
@@ -87,6 +105,11 @@
 
         postData("./get_invitations")
         .then((data) => {
+          if (data["result"].length > 0) {
+            let header = document.createElement("h3");
+            header.innerText = "Invitations";
+            document.getElementById("invitations").appendChild(header);
+          }
           data["result"].forEach( (e) => {
               let listOfGroupNames = document.getElementById("invitations");
               let newLink = document.createElement("text");
@@ -130,7 +153,6 @@
             });
         });
 
-        let number_of_tasks = 1;
         let task_offset = 0;
         
         function updateTaskTable() {
@@ -139,7 +161,6 @@
           postData('/search_tasks_created_by_user', {"title": title, "source": source, offset: task_offset})
             .then(data => {
               let table = document.getElementById("tasks");
-              number_of_tasks = Math.max(1, data["result"].length);
               table.innerHTML = "";
               data["result"].forEach((r) => {
                 let row = document.createElement("tr");
@@ -163,8 +184,9 @@
 
         updateTaskTable();
 
-        document.getElementById("search_next_page").onclick = () => { task_offset = (task_offset+10)%number_of_tasks; updateTaskTable(); }
-        document.getElementById("search_prev_page").onclick = () => { task_offset = (task_offset-10+number_of_tasks)%number_of_tasks; updateTaskTable(); }
+        document.getElementById("search_next_page").onclick = () => { task_offset = task_offset+10; updateTaskTable(); }
+        document.getElementById("search_prev_page").onclick = () => { task_offset = Math.max(0, task_offset-10); updateTaskTable(); }
+
 
         
 
