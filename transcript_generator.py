@@ -83,9 +83,11 @@ while True:
 
     if r is not None:
         task_id = r["id"]
-        actual_transcript = r["transcript"].lower().split(" ")
+        actual_transcript = r["transcript"].replace(".","").replace("!","").replace("?","").replace(",","")
+        actual_transcript = actual_transcript.lower().split(" ")
         transcript = transcript.lower()
         actual_transcript = " ".join(filter(lambda x: x in transcript, actual_transcript))
+        
         query_str = """
             UPDATE AudioFiles
             SET Transcript = ?
