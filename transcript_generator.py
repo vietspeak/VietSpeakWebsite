@@ -33,6 +33,54 @@ def speech_to_text(filename = "input.mp3"):
     ret += json.loads(rec.FinalResult())["text"]
     return ret
 
+def grade_submissions():
+    query_str = """
+        SELECT Submissions.ROWID as id, Submissions.TaskID as TaskID, Submissions.FileID as FileID, AudioFiles.Transcript as transcript 
+        FROM Submissions, AudioFiles
+        WHERE Submissions.FileID = AudioFiles.ROWID AND Submissions.CurrentStatus = 1 AND AudioFiles.Transcript IS NOT NULL
+    """
+
+    ar = query_db(query_str)
+
+    for r in ar:
+        file_id = r["FileID"]
+        submission_id = r["id"]
+        task_id = r["TaskID"]
+        transcript = r["transcript"]
+
+        query_str = """
+            SELECT AudioFiles.Transcript as Transcript
+            FROM AudioFiles, Tasks
+            WHERE Tasks.CurrentStatus = 2 AND Tasks.FileID = AudioFiles.ROWID AND Tasks.ROWID = ?
+        """
+
+        r2 = query_db(query_str, (task_id, ), one=True)
+
+        feedback = ""
+        score = 0
+
+        if r2 is None:
+            feedback = "Judge Error. Please resubmit."
+            score = 0
+        else:
+            actual_transcript = r2["Transcript"]
+            score, mismatches = grader(actual_transcript, transcript)
+            feedback = []
+            for m in mismatches:
+                if m[1] == "":
+                    feedback.append("*{}* -> ∅".format(m[0]))
+                else:
+                    feedback.append("*{}* -> `{}`".format(m[0], m[1]))
+            feedback = " | ".join(feedback)
+
+        query_str = """
+            UPDATE Submissions
+            SET Feedback = ?, Score = ?, CurrentStatus = 2
+            WHERE ROWID = ?
+        """
+
+        query_db(query_str, (feedback, score*100, submission_id))
+
 while True:
     db = sqlite3.connect(DATABASE)
     db.row_factory = sqlite3.Row
@@ -100,50 +148,16 @@ while True:
             WHERE ROWID = ?
         """
         query_db(query_str, (task_id, ))
-    
-    query_str = """
-        SELECT ROWID as id, TaskID FROM Submissions
-        WHERE FileID = ?
-    """
-
-    r = query_db(query_str, (file_id, ), one=True)
-
-    if r is not None:
-        submission_id = r["id"]
-        task_id = r["TaskID"]
-
-        query_str = """
-            SELECT AudioFiles.Transcript as Transcript
-            FROM AudioFiles, Tasks
-            WHERE Tasks.CurrentStatus = 2 AND Tasks.FileID = AudioFiles.ROWID AND Tasks.ROWID = ?
-        """
-
-        r2 = query_db(query_str, (task_id, ), one=True)
-
-        feedback = ""
-        score = 0
-
-        if r2 is None:
-            feedback = "Judge Error. Please resubmit."
-            score = 0
-        else:
-            actual_transcript = r2["Transcript"]
-            score, mismatches = grader(actual_transcript, transcript)
-            feedback = []
-            for m in mismatches:
-                if m[1] == "":
-                    feedback.append("*{}* -> ∅".format(m[0]))
-                else:
-                    feedback.append("*{}* -> `{}`".format(m[0], m[1]))
-            feedback = " | ".join(feedback)
 
         query_str = """
             UPDATE Submissions
-            SET Feedback = ?, Score = ?, CurrentStatus = 2
-            WHERE ROWID = ?
-        """
+            SET CurrentStatus = 1
+            WHERE TaskID = ?
+        """ 
 
-        query_db(query_str, (feedback, score*100, submission_id))
+        query_db(query_str, (task_id, ))
+    
+    grade_submissions()
     
     db.close()
     

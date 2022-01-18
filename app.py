@@ -6,6 +6,8 @@ from functools import wraps
 from flask import Flask, render_template, request, g, session, redirect, url_for
 from flask.json import jsonify
 from flask_bcrypt import Bcrypt
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 constant_data = None
 with open("constant.json", "r") as f:
@@ -14,8 +16,15 @@ DATABASE = constant_data["PATH_TO_DATABASE"]
 
 app = Flask(__name__)
 app.secret_key = constant_data["SESSION_SECRET_KEY"]
+app.config['MAX_CONTENT_LENGTH'] = constant_data["MAX_CONTENT_LENGTH"]
 bcrypt = Bcrypt(app)
 accepted_methods = ["POST", "GET"]
+
+limiter = Limiter(
+    app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
 
 def to_int(s):
     try:
@@ -163,6 +172,7 @@ def home_page():
 
 
 @app.route("/register", methods=accepted_methods)
+@limiter.limit("10 per day")
 def register():
     username = request.values.get("username", "")
     password = request.values.get("password", "")
@@ -257,6 +267,7 @@ def create_group_page():
 
 
 @app.route("/create_group", methods=accepted_methods)
+@limiter.limit("10 per day")
 @login_required
 def create_group():
     user_id = session.get("user_id")
@@ -354,6 +365,7 @@ def accept_invitation():
     }
 
 @app.route("/invite_member", methods=accepted_methods)
+@limiter.limit("1000 per day")
 @login_required
 def invite_member():
     owner_id = session.get("user_id")
@@ -396,6 +408,7 @@ def logout():
 
 
 @app.route("/create_task", methods=accepted_methods)
+@limiter.limit("200 per day")
 @login_required
 def create_task():
     
@@ -634,6 +647,7 @@ def upload_file(file):
     return r["id"]
 
 @app.route("/submit", methods=accepted_methods)
+@limiter.limit("200 per day")
 @login_required
 def submit():
     user_id = session.get("user_id")
@@ -686,7 +700,7 @@ def get_submissions():
             "id": x["id"],
             "time": x["time"],
             "status": x["status"],
-            "score": round(x["score"], 2)
+            "score": round(x["score"] if x["score"] is not None else 0, 2)
         })
     
     return jsonify({
@@ -748,6 +762,7 @@ def view_submission():
 
     
 @app.route("/add_task_to_group", methods=accepted_methods)
+@limiter.limit("200 per day")
 @login_required
 def add_task_to_group():
     user_id = session.get("user_id")
@@ -818,6 +833,7 @@ def view_group_members():
                             can_change_member = can_change_member)
 
 @app.route("/change_group_member_rights", methods=accepted_methods)
+@limiter.limit("1000 per day")
 @login_required
 def change_group_member_rights():
     user_id = session.get("user_id")
