@@ -1,6 +1,6 @@
 {
     "PATH_TO_DATABASE": "./dbse/main.sqlite",
-    "SESSION_SECRET_KEY": "939ffb40d8012f444decc886ceff46d6",
-    "PATH_TO_MODEL": "vosk-model-en-us-daanzu-20200905",
+    "SESSION_SECRET_KEY": "pleasechangethisstring",
+    "PATH_TO_MODEL": "model",
     "MAX_CONTENT_LENGTH": 16777216
 }
