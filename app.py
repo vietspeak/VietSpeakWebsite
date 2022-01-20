@@ -196,6 +196,12 @@ def register():
             "message": "The username cannot be empty."
         })
     
+    if len(username) > 32:
+        return jsonify({
+            "status": False,
+            "message": "The username cannot be longer than 32 characters."
+        })
+    
     password_hashed = bcrypt.generate_password_hash(password).decode('utf-8')
 
     if get_password(username) is not None:
