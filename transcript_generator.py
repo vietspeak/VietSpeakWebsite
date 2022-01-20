@@ -12,7 +12,7 @@ DATABASE = constant_data["PATH_TO_DATABASE"]
 
 SetLogLevel(0)
 sample_rate=16000
-model = Model("model")
+model = Model(constant_data["PATH_TO_MODEL"])
 rec = KaldiRecognizer(model, sample_rate)
 
 def speech_to_text(filename = "input.mp3"):
