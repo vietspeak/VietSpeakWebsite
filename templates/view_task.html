@@ -18,7 +18,8 @@
     <a class="btn btn-primary" href="./tasks" role="button">Home</a><br>
     {% if group_id %}
     <a class="btn btn-primary" href="./view_group_members?id={{group_id}}" role="button">{{groupname}}'s Members</a>
-    <a class="btn btn-primary" href="./view_group_tasks?id={{group_id}}" role="button">{{groupname}}'s Tasks</a><br>
+    <a class="btn btn-primary" href="./view_group_tasks?id={{group_id}}" role="button">{{groupname}}'s Tasks</a>
+    <a class="btn btn-primary" href="./view_group_submissions?id={{group_id}}" role="button">{{groupname}}'s Submissions</a><br>
     {% endif %}
     <form>
         <input type="text" class="form-control" id="title" placeholder="Title"/>
@@ -125,6 +126,7 @@
                 const event = new Date(unix_time * 1000)
                 return event.toString();
             }
+            
             data["result"].forEach((r) => {
                 let row = document.createElement("tr");
                 let box1 = document.createElement("td");

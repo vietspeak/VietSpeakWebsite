@@ -8,7 +8,7 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
-    <title>Tasks - VietSpeak</title>
+    <title>{{groupname}}'s Members - VietSpeak</title>
     <p id="group_id" hidden>{{group_id}}</p>
     <p id="can_change_member" hidden>{{can_change_member}}</p> 
   </head>
@@ -17,7 +17,8 @@
     <a class="btn btn-danger" href="./logout" role="button">Logout</a><br>
     <a class="btn btn-primary" href="./tasks" role="button">Home</a><br>
     <a class="btn btn-primary" href="./view_group_members?id={{group_id}}" role="button">{{groupname}}'s Members</a>
-    <a class="btn btn-primary" href="./view_group_tasks?id={{group_id}}" role="button">{{groupname}}'s Tasks</a><br>
+    <a class="btn btn-primary" href="./view_group_tasks?id={{group_id}}" role="button">{{groupname}}'s Tasks</a>
+    <a class="btn btn-primary" href="./view_group_submissions?id={{group_id}}" role="button">{{groupname}}'s Submissions</a><br>
     <h3>Members</h3>
     <div class="form-group row">
       <div>

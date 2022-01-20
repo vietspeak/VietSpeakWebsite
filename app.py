@@ -938,6 +938,56 @@ def view_group_tasks():
                             group_id = group_id,
                             can_change_task = can_change_task)
 
+@app.route("/view_group_submissions", methods=accepted_methods)
+@login_required
+def view_group_submissions():
+    user_id = session.get("user_id")
+    group_id = int(request.values.get("id"))
+
+    if not is_user_in_group(user_id, group_id):
+        return redirect(url_for("logout"))
+    
+    session["group_id"] = group_id
+    session["groupname"] = get_group_name(group_id)
+
+    return render_template("view_group_submissions.html",
+                             username = session.get("username"),
+                             groupname = session.get("groupname"),
+                             group_id = group_id)
+
+@app.route("/get_group_submissions", methods=accepted_methods)
+@login_required
+def get_group_submissions():
+    user_id = session.get("user_id")
+    group_id = session.get("group_id")
+
+    if not is_user_in_group(user_id, group_id):
+        return redirect(url_for("logout"))
+    
+    query_str = """
+        SELECT Submissions.ROWID as id, Submissions.CreationTime as time, Tasks.ROWID as task_id, Tasks.Title as task_title, Submissions.CurrentStatus as status
+        FROM Submissions, Tasks, TaskGroups
+        WHERE Submissions.TaskID = Tasks.ROWID AND Submissions.TaskID = TaskGroups.TaskID AND TaskGroups.GroupID = ? 
+        ORDER BY Submissions.CreationTime DESC
+        LIMIT 5
+    """ 
+
+    r = query_db(query_str, (group_id, ))
+
+    total_result = []
+    for x in r:
+        total_result.append({
+            "id": x["id"],
+            "time": x["time"],
+            "task_id": x["task_id"],
+            "task_title": x["task_title"],
+            "status": x["status"]
+        })
+    
+    return jsonify({
+        "result": total_result
+    })
+
 
 @app.teardown_appcontext
 def close_connection(exception):

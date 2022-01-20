@@ -8,54 +8,34 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
-    <title>Submission {{submission_id}}- VietSpeak</title>
-    <div id="task_id" hidden>{{task_id}}</div>
-    <div id="submission_id" hidden>{{submission_id}}</div>
+    <title>{{groupname}}'s Submissions - VietSpeak</title>
+    <p id="group_id" hidden>{{group_id}}</p>
   </head>
   <body>
-
     <h1>Hello {{ username }}!</h1>
     <a class="btn btn-danger" href="./logout" role="button">Logout</a><br>
     <a class="btn btn-primary" href="./tasks" role="button">Home</a><br>
-    {% if group_id %}
     <a class="btn btn-primary" href="./view_group_members?id={{group_id}}" role="button">{{groupname}}'s Members</a>
     <a class="btn btn-primary" href="./view_group_tasks?id={{group_id}}" role="button">{{groupname}}'s Tasks</a>
     <a class="btn btn-primary" href="./view_group_submissions?id={{group_id}}" role="button">{{groupname}}'s Submissions</a><br>
-    {% endif %}
+    <h3>Submission Queue</h3>
     <table class="table" >
         <thead>
           <tr>
             <th scope="col">ID</th>
             <th scope="col">Time</th>
-            <th score="col">Task</th>
+            <th scope="col">Task</th>
             <th scope="col">Status</th>
-            <th scope="col">Score</th>
-          </tr>
-          <tr>
-            <td id="submission_id">{{submission_id}}</th>
-            <td id="time"></th>
-            <td id="task_info"></th>
-            <td id="status"></th>
-            <td id="score"></th>
           </tr>
         </thead>
         <tbody id="submissions">  
         </tbody>
     </table>
-
-    <h2>Mispronounced words</h2>
-    <div id="feedback">
-    </div>
-    <h2>Transcript</h2>
-    <div id="transcript">
-    </div>
-    
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/showdown@1.9.1/dist/showdown.min.js"></script>
     <script type="module">
         async function postData(url = '', data = {}) {
             let formData = new FormData();
@@ -67,40 +47,43 @@
             return response.json();
         }
 
-        function convertTime(unix_time) {
-            const event = new Date(unix_time * 1000)
-            return event.toString();
-        }
 
-        let submission_id = document.getElementById("submission_id").innerText;
+        postData("./get_group_submissions")
+        .then((data) => {
+            let table = document.getElementById("submissions");
 
-        postData("/get_submission", { "id": submission_id})
-        .then(result => {
-            let markdown_converter = new showdown.Converter();
-            document.getElementById("feedback").innerHTML = markdown_converter.makeHtml(result["feedback"]);
-            document.getElementById("transcript").innerText = result["transcript"];
-            document.getElementById("time").innerText = convertTime(result["time"]);
-            
-            let task_info = document.getElementById("task_info");
+            function convertTime(unix_time) {
+                const event = new Date(unix_time * 1000)
+                return event.toString();
+            }
 
-            let taskLink = document.createElement("a");
-            taskLink.setAttribute("class", "btn");
-            taskLink.setAttribute("href", "/view_task?id=" + result["task_id"]);
-            taskLink.innerText = result["task_title"];
+            data["result"].forEach((r) => {
+                let row = document.createElement("tr");
+                let box1 = document.createElement("td");
+                box1.innerText = r["id"];
+                let box2 = document.createElement("td");
+                box2.innerText = convertTime(r["time"]);
+                let box3 = document.createElement("td");
+                let link = document.createElement("a");
+                link.innerText = r["task_title"];
+                link.href = "./view_task?id=" + r["task_id"];
+                box3.appendChild(link);
 
-            task_info.appendChild(taskLink);
-
-            if (result["status"] == 1)
-                document.getElementById("status").innerText = "Evaluating";
-            else
-                document.getElementById("status").innerText = "Graded";
-            
-            document.getElementById("score").innerText = result["score"];
-
-
+                let box4 = document.createElement("td");
+                if (r["status"] == 1) box4.innerText = "Evaluating";
+                else box4.innerText = "Graded";
+                
+                row.appendChild(box1);
+                row.appendChild(box2);
+                row.appendChild(box3);
+                row.appendChild(box4);
+                table.appendChild(row);
+            })
+            console.log(data);
         });
 
         
+
     </script>
   </body>
 </html>

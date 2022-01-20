@@ -17,7 +17,8 @@
     <a class="btn btn-primary" href="./tasks" role="button">Home</a><br>
     {% if group_id %}
     <a class="btn btn-primary" href="./view_group_members?id={{group_id}}" role="button">{{groupname}}'s Members</a>
-    <a class="btn btn-primary" href="./view_group_tasks?id={{group_id}}" role="button">{{groupname}}'s Tasks</a><br>
+    <a class="btn btn-primary" href="./view_group_tasks?id={{group_id}}" role="button">{{groupname}}'s Tasks</a>
+    <a class="btn btn-primary" href="./view_group_submissions?id={{group_id}}" role="button">{{groupname}}'s Submissions</a><br>
     {% endif %}
     <h2>Create Task</h2>
     <form>
