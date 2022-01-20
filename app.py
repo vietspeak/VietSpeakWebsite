@@ -8,6 +8,7 @@ from flask.json import jsonify
 from flask_bcrypt import Bcrypt
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+import re
 
 constant_data = None
 with open("constant.json", "r") as f:
@@ -181,6 +182,18 @@ def register():
         return jsonify({
             "status": False,
             "message": "The password cannot be empty."
+        })
+
+    if not bool(re.match(r"^[a-zA-Z0-9@\. ]+$", username)):
+        return jsonify({
+            "status": False,
+            "message": "The username can only contain English letters, numbers, @, ., and spaces."
+        })
+    
+    if username == "":
+        return jsonify({
+            "status": False,
+            "message": "The username cannot be empty."
         })
     
     password_hashed = bcrypt.generate_password_hash(password).decode('utf-8')
