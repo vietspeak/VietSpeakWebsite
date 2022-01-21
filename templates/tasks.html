@@ -16,88 +16,133 @@
       integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
       crossorigin="anonymous"
     />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Jost&display=swap"
+      rel="stylesheet"
+    />
+
     <title>Tasks - VietSpeak</title>
   </head>
   <body>
-    <h1>Hello {{ username }}!</h1>
-    <a class="btn btn-danger" href="./logout" role="button">Logout</a><br />
-    <a class="btn btn-primary" href="./tasks" role="button">Home</a>
-    <h2>My Groups</h2>
-    <div id="group_names"></div>
-    <div id="invitations"></div>
-    <div class="form-group row">
-      <div>
-        <input
-          type="text"
-          class="form-control"
-          id="group_name"
-          placeholder="Group Name"
-        />
-      </div>
-      <div>
-        <button type="button" class="btn btn-primary" id="create_group">
-          Create
-        </button>
+    <div class="container">
+      <div class="row">
+        <div class="col">
+          <div class="inner-container mt-3">
+            <header class="d-flex flex-md-row">
+              <h3 class="mx-2">Hello {{ username }}!</h3>
+              <a
+                class="btn btn-danger mx-2 py-2 px-5"
+                href="./logout"
+                role="button"
+                >Logout</a
+              ><br />
+              <a
+                class="btn btn-primary mx-2 py-2 px-5"
+                href="./tasks"
+                role="button"
+                >Home</a
+              >
+            </header>
+
+            <h2>My Groups</h2>
+            <div id="group_names"></div>
+            <div id="invitations"></div>
+            <div class="form-group row">
+              <div>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="group_name"
+                  placeholder="Group Name"
+                />
+              </div>
+              <div>
+                <button
+                  type="button"
+                  class="btn btn-primary mt-3"
+                  id="create_group"
+                >
+                  Create
+                </button>
+              </div>
+            </div>
+
+            <small id="message" class="form-text text-muted"></small>
+
+            <h2 class="mt-5">My Tasks</h2>
+            <a
+              class="btn btn-primary my-3"
+              href="./create_task_page"
+              role="button"
+              >Create A Task</a
+            >
+
+            <div class="row">
+              <div class="col">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="search_title"
+                  placeholder="Title"
+                />
+              </div>
+              <div class="col">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="search_source"
+                  placeholder="Source"
+                />
+              </div>
+              <div class="col">
+                <button type="button" class="btn btn-primary" id="search">
+                  Search
+                </button>
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <button
+                  type="button"
+                  class="btn btn-primary my-3"
+                  id="search_prev_page"
+                >
+                  Previous 10
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  id="search_next_page"
+                >
+                  Next 10
+                </button>
+              </div>
+            </div>
+
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Title</th>
+                  <th scope="col">Source</th>
+                </tr>
+              </thead>
+              <tbody id="tasks"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
 
-    <small id="message" class="form-text text-muted"></small>
-    <h2>My Tasks</h2>
-    <a class="btn btn-primary" href="./create_task_page" role="button"
-      >Create A Task</a
-    >
-
-    <div class="row">
-      <div class="col">
-        <input
-          type="text"
-          class="form-control"
-          id="search_title"
-          placeholder="Title"
-        />
-      </div>
-      <div class="col">
-        <input
-          type="text"
-          class="form-control"
-          id="search_source"
-          placeholder="Source"
-        />
-      </div>
-      <div class="col">
-        <button type="button" class="btn btn-primary" id="search">
-          Search
-        </button>
-      </div>
-    </div>
-
-    <div class="row">
-      <div>
-        <button type="button" class="btn btn-primary" id="search_prev_page">
-          Previous 10
-        </button>
-        <button type="button" class="btn btn-primary" id="search_next_page">
-          Next 10
-        </button>
-      </div>
-    </div>
-
-    <table class="table">
-      <thead>
-        <tr>
-          <th scope="col">ID</th>
-          <th scope="col">Title</th>
-          <th scope="col">Source</th>
-        </tr>
-      </thead>
-      <tbody id="tasks"></tbody>
-    </table>
- 
     <script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
-    crossorigin="anonymous"
-  ></script>
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+      crossorigin="anonymous"
+    ></script>
 
     <script type="module">
       async function postData(url = "", data = {}) {
@@ -227,4 +272,9 @@
       };
     </script>
   </body>
+  <style>
+    * {
+      font-family: "Jost", sans-serif;
+    }
+  </style>
 </html>
