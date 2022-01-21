@@ -29,41 +29,50 @@
         <div class="col">
           <div class="main m-3">
             <header>
-              <h2>VietSpeak Bot</h2>
+              <h2 class="title">VietSpeak Bot</h2>
             </header>
-            <form id="login-form" class="m-3">
-              <input
-                type="text"
-                class="form-control"
-                id="username"
-                placeholder="Username"
-              />
-              <input
-                type="password"
-                class="form-control"
-                id="password"
-                placeholder="Password"
-              />
-              <div class="my-3">
-                <button
-                  type="button"
-                  style="background-color: #8500ff; border: none"
-                  class="btn btn-primary px-5"
-                  id="login"
-                >
-                  Login
-                </button>
-                <button
-                  type="button"
-                  style="background-color: #ff00a5; border: none"
-                  class="btn btn-primary px-5"
-                  id="register"
-                >
-                  Register
-                </button>
-                <small id="message" class="form-text text-muted"></small>
+            <div class="row my-5">
+              <div class="col"></div>
+              <div class="col">
+                <form id="login-form" class="m-3">
+                  <input
+                    type="text"
+                    class="form-control my-3"
+                    id="username"
+                    placeholder="Username"
+                  />
+
+                  <input
+                    type="password"
+                    class="form-control"
+                    id="password"
+                    placeholder="Password"
+                  />
+                  <div class="d-flex flex-column my-3">
+                    <button
+                      type="button"
+                      style="background-color: #8500ff; border: none"
+                      class="btn btn-primary px-5"
+                      id="login"
+                    >
+                      Login
+                    </button>
+                    <br />
+                    <button
+                      type="button"
+                      style="background-color: #ff00a5; border: none"
+                      class="btn btn-primary px-5"
+                      id="register"
+                    >
+                      Register
+                    </button>
+
+                    <small id="message" class="form-text text-muted"></small>
+                  </div>
+                </form>
               </div>
-            </form>
+              <div class="col"></div>
+            </div>
 
             <p>
               VietSpeak là một cộng đồng luyện nói tiếng Anh phi lợi nhuận dành
@@ -182,11 +191,12 @@
     </script>
   </body>
   <style>
-    h2 {
+    .title {
       font-family: "Jost", sans-serif;
       font-weight: 600;
       font-size: 4rem;
       color: #6f3aeb;
+      text-align: center;
     }
     p {
       font-family: "Jost", sans-serif;
