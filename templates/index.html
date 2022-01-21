@@ -1,75 +1,157 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+      integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+      crossorigin="anonymous"
+    />
 
     <title>Home - VietSpeak</title>
   </head>
   <body>
+    <div class="container">
+      <div class="row">
+        <div class="col">
+          <div class="main m-3">
+            <form id="login-form" class="m-3">
+              <input
+                type="text"
+                class="form-control"
+                id="username"
+                placeholder="Username"
+              />
+              <input
+                type="password"
+                class="form-control"
+                id="password"
+                placeholder="Password"
+              />
+              <div class="my-3">
+                <button type="button" class="btn btn-primary" id="login">
+                  Login
+                </button>
+                <button type="button" class="btn btn-primary" id="register">
+                  Register
+                </button>
+                <small id="message" class="form-text text-muted"></small>
+              </div>
+            </form>
 
-    <form id="login-form">
-        <input type="text" class="form-control" id="username" placeholder="Username">
-        <input type="password" class="form-control" id="password" placeholder="Password">
-        <button type="button" class="btn btn-primary" id="login">Login</button>
-        <button type="button" class="btn btn-primary" id="register">Register</button>
-        <small id="message" class="form-text text-muted"></small>
-    </form>
+            <p>
+              VietSpeak là một cộng đồng luyện nói tiếng Anh phi lợi nhuận dành
+              cho người Việt.
+            </p>
+            <p>
+              Hoạt động của VietSpeak rất đơn giản, ai cũng có thể theo được:
+            </p>
+            <ul>
+              <li>
+                Bước 1: Chọn một trong 4 mức độ luyện tập (từ đọc một từ đơn lẻ
+                đến đọc một đoạn phát biểu dài). Mỗi mức độ sẽ có phần bài đọc
+                và bài nghe do người bản xứ nói. Từ hai phần này, các bạn có thể
+                tự nghe, tự sửa lỗi, tự tập.
+              </li>
+              <li>
+                Bước 2: Nộp bài thu âm và nhận xét cho hai người bạn kề trên
+                trong 10 ngày.
+              </li>
+              <li>
+                Bước 3: Các bạn sẽ nhận được nhận xét từ phần mềm VietSpeak Bot
+                và ít nhất hai người bạn khác.
+              </li>
+            </ul>
+            <p>
+              Để đảm bảo chất lượng học tập, các bạn không nộp bài thu âm hoặc
+              không nhận xét chất lượng cho các thành viên khác trong thời hạn
+              10 ngày sẽ bị loại khỏi nhóm.
+            </p>
+            <p>
+              Ngoài ra, nhiều thành viên thường xuyên tổ chức các buổi giao lưu,
+              chia sẻ kinh nghiệm nghe-nói-đọc-viết và các buổi nói chuyện chỉ
+              dùng tiếng Anh giúp các bạn nâng cao khả năng nghe và khả năng
+              phản xạ khi nói. Các thành viên VietSpeak đa số đều có tinh thần
+              hiếu học, sẵn sàng chia sẻ kiến thức và giúp đỡ nhau trong việc
+              học tập tiếng Anh.
+            </p>
+            <p>
+              Nếu bạn thấy nhóm sẽ hữu ích cho bản thân và quyết tâm theo học
+              cùng nhóm thì hãy đăng kí tại
+              <a href="https://register.vietspeak.org"
+                >https://register.vietspeak.org</a
+              >
+            </p>
+            <p>
+              Sau khi đăng kí xong, các bạn có thể kiểm tra trạng thái xét duyệt
+              đơn đăng kí của mình ở
+              <a href="https://status.vietspeak.org/"
+                >https://status.vietspeak.org/</a
+              >
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
 
-    <p>VietSpeak là một cộng đồng luyện nói tiếng Anh phi lợi nhuận dành cho người Việt.</p>
-    <p>Hoạt động của VietSpeak rất đơn giản, ai cũng có thể theo được:</p>
-    <ul>
-        <li>Bước 1: Chọn một trong 4 mức độ luyện tập (từ đọc một từ đơn lẻ đến đọc một đoạn phát biểu dài). Mỗi mức độ sẽ có phần bài đọc và bài nghe do người bản xứ nói. Từ hai phần này, các bạn có thể tự nghe, tự sửa lỗi, tự tập.</li> 
-        <li>Bước 2: Nộp bài thu âm và nhận xét cho hai người bạn kề trên trong 10 ngày.</li>
-        <li>Bước 3: Các bạn sẽ nhận được nhận xét từ phần mềm VietSpeak Bot và ít nhất hai người bạn khác.</li>
-    </ul>
-    <p>Để đảm bảo chất lượng học tập, các bạn không nộp bài thu âm hoặc không nhận xét chất lượng cho các thành viên khác trong thời hạn 10 ngày sẽ bị loại khỏi nhóm.</p>
-    <p>Ngoài ra, nhiều thành viên thường xuyên tổ chức các buổi giao lưu, chia sẻ kinh nghiệm nghe-nói-đọc-viết và các buổi nói chuyện chỉ dùng tiếng Anh giúp các bạn nâng cao khả năng nghe và khả năng phản xạ khi nói. Các thành viên VietSpeak đa số đều có tinh thần hiếu học, sẵn sàng chia sẻ kiến thức và giúp đỡ nhau trong việc học tập tiếng Anh.</p>    
-    <p>Nếu bạn thấy nhóm sẽ hữu ích cho bản thân và quyết tâm theo học cùng nhóm thì hãy đăng kí tại <a href="https://register.vietspeak.org">https://register.vietspeak.org</a></p>
-    <p>Sau khi đăng kí xong, các bạn có thể kiểm tra trạng thái xét duyệt đơn đăng kí của mình ở <a href="https://status.vietspeak.org/">https://status.vietspeak.org/</a></p>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+      crossorigin="anonymous"
+    ></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
     <script type="module">
-        async function postData(url = '', data = {}) {
-            let formData = new FormData();
-            for (const [key, value] of Object.entries(data)) formData.append(key, value);
-            const response = await fetch(url, {
-                method: 'POST',
-                body: formData
-            });
-            return response.json();
-        }
+      async function postData(url = "", data = {}) {
+        let formData = new FormData();
+        for (const [key, value] of Object.entries(data))
+          formData.append(key, value);
+        const response = await fetch(url, {
+          method: "POST",
+          body: formData,
+        });
+        return response.json();
+      }
 
-        document.getElementById("register").onclick = () => {
-            let username = document.getElementById("username").value;
-            let password = document.getElementById("password").value;
+      document.getElementById("register").onclick = () => {
+        let username = document.getElementById("username").value;
+        let password = document.getElementById("password").value;
 
-            postData('/register', {"username": username, "password": password})
-            .then(data => {
-                if (data.status) window.location.href = "./tasks";
-                document.getElementById("message").innerText = "Your username has been taken by someone else."
-            });
-        }
+        postData("/register", { username: username, password: password }).then(
+          (data) => {
+            if (data.status) window.location.href = "./tasks";
+            document.getElementById("message").innerText =
+              "Your username has been taken by someone else.";
+          }
+        );
+      };
 
-        document.getElementById("login").onclick = () => {
-            let username = document.getElementById("username").value;
-            let password = document.getElementById("password").value;
+      document.getElementById("login").onclick = () => {
+        let username = document.getElementById("username").value;
+        let password = document.getElementById("password").value;
 
-            postData('/login', {"username": username, "password": password})
-            .then(data => {
-                if (data.status) window.location.href = "./tasks";
-                else document.getElementById("message").innerText = "Your username or password is incorrect.";
-            });
-        }
+        postData("/login", { username: username, password: password }).then(
+          (data) => {
+            if (data.status) window.location.href = "./tasks";
+            else
+              document.getElementById("message").innerText =
+                "Your username or password is incorrect.";
+          }
+        );
+      };
     </script>
   </body>
-  <style>
-
-  </style>
-
+  <style></style>
 </html>
