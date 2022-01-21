@@ -125,9 +125,18 @@
         return response.json();
       }
 
+      function clientValidation(usernameInput, passwordInput) {
+        if (usernameInput.length <= 0 || passwordInput.length <= 0) {
+          alert("You should provide your username and password");
+          return;
+        }
+      }
+
       document.getElementById("register").onclick = () => {
         let username = document.getElementById("username").value;
         let password = document.getElementById("password").value;
+
+        clientValidation(username, password);
 
         postData("/register", { username: username, password: password }).then(
           (data) => {
@@ -141,6 +150,8 @@
       document.getElementById("login").onclick = () => {
         let username = document.getElementById("username").value;
         let password = document.getElementById("password").value;
+
+        clientValidation(username, password);
 
         postData("/login", { username: username, password: password }).then(
           (data) => {
