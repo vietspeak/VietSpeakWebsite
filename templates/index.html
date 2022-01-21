@@ -45,10 +45,20 @@
                 placeholder="Password"
               />
               <div class="my-3">
-                <button type="button" class="btn btn-primary" id="login">
+                <button
+                  type="button"
+                  style="background-color: #8500ff; border: none"
+                  class="btn btn-primary px-5"
+                  id="login"
+                >
                   Login
                 </button>
-                <button type="button" class="btn btn-primary" id="register">
+                <button
+                  type="button"
+                  style="background-color: #ff00a5; border: none"
+                  class="btn btn-primary px-5"
+                  id="register"
+                >
                   Register
                 </button>
                 <small id="message" class="form-text text-muted"></small>
@@ -180,6 +190,12 @@
     }
     p {
       font-family: "Jost", sans-serif;
+    }
+
+    #login:hover,
+    #register:hover {
+      transition: 1s;
+      transform: scale(1.1);
     }
   </style>
 </html>
