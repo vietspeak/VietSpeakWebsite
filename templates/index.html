@@ -128,39 +128,45 @@
       function clientValidation(usernameInput, passwordInput) {
         if (usernameInput.length <= 0 || passwordInput.length <= 0) {
           alert("You should provide your username and password");
-          return;
+          return false;
         }
+        if (usernameInput.length > 32) {
+          alert("Your username should be less than 32 characters!");
+          return false;
+        }
+        return true;
       }
 
       document.getElementById("register").onclick = () => {
         let username = document.getElementById("username").value;
         let password = document.getElementById("password").value;
 
-        clientValidation(username, password);
-
-        postData("/register", { username: username, password: password }).then(
-          (data) => {
+        if (clientValidation(username, password)) {
+          postData("/register", {
+            username: username,
+            password: password,
+          }).then((data) => {
             if (data.status) window.location.href = "./tasks";
             document.getElementById("message").innerText =
               "Your username has been taken by someone else.";
-          }
-        );
+          });
+        }
       };
 
       document.getElementById("login").onclick = () => {
         let username = document.getElementById("username").value;
         let password = document.getElementById("password").value;
 
-        clientValidation(username, password);
-
-        postData("/login", { username: username, password: password }).then(
-          (data) => {
-            if (data.status) window.location.href = "./tasks";
-            else
-              document.getElementById("message").innerText =
-                "Your username or password is incorrect.";
-          }
-        );
+        if (clientValidation(username, password)) {
+          postData("/login", { username: username, password: password }).then(
+            (data) => {
+              if (data.status) window.location.href = "./tasks";
+              else
+                document.getElementById("message").innerText =
+                  "Your username or password is incorrect.";
+            }
+          );
+        }
       };
     </script>
   </body>
