@@ -1,5 +1,5 @@
 {
-    "PATH_TO_DATABASE": "./dbse/main.sqlite",
+    "PATH_TO_DATABASE": "./database/main.sqlite",
     "SESSION_SECRET_KEY": "pleasechangethisstring",
     "PATH_TO_MODEL": "model",
     "MAX_CONTENT_LENGTH": 16777216
