@@ -134,6 +134,13 @@
           alert("Your username should be less than 32 characters!");
           return false;
         }
+
+        let reg = new RegExp("^[a-zA-Z0-9@\. ]+$");
+
+        if (!reg.test(usernameInput)) {
+          alert("The username can only contain English letters, numbers, @, ., and spaces.");
+          return false;
+        }
         return true;
       }
 
